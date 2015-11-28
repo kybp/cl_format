@@ -3,6 +3,10 @@ require 'minitest/autorun'
 
 class BasicOutputTest < MiniTest::Test
   def test_nothing
+    assert_equal('', ''.cl_format)
+  end
+
+  def test_simple
     assert_equal('hi', 'hi'.cl_format)
   end
 
