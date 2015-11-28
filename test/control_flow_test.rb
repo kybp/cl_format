@@ -1,4 +1,4 @@
-require_relative '../format'
+require_relative '../cl_format'
 require 'minitest/autorun'
 
 class ControlFlowTest < MiniTest::Test
