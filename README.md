@@ -7,11 +7,15 @@ described fully in the
 
 ## Currently implemented:
 
-- [22.3.1](http://www.lispworks.com/documentation/HyperSpec/Body/22_ca.htm)
+- [22.3.1: Basic Output]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_ca.htm)
   (except for ~C modifiers)
-- [22.3.2](http://www.lispworks.com/documentation/HyperSpec/Body/22_cb.htm)
-- [22.3.7.1](http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
-- [22.3.9.3](http://www.lispworks.com/documentation/HyperSpec/Body/22_cic.htm)
+- [22.3.2: Radix Control]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cb.htm)
+- [22.3.7.1: Go-To]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
+- [22.3.9.3: Ignored Newline]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cic.htm)
 
 ## Usage
 
