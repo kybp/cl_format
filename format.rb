@@ -108,7 +108,7 @@ def tilde_r(s, acc, *args)
       n = args.shift
       radix = match[:radix].to_i
       mincol = match[:mincol].to_i
-      padchar = match[:padchar].nil? ? '' : match[:padchar]
+      padchar = match[:padchar].nil? ? ' ' : match[:padchar]
       commachar =
         if match[:commachar].nil? || match[:commachar].empty?
           ','
