@@ -187,11 +187,39 @@ def tilde_x(s, acc, used, args)
   if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)x/.match(s)
     tilde_r("~16,#{match[:args]}r#{match.post_match}", acc, used, args)
   else
-    raise ArgumentError, 'unimplmented format directive'
+    tilde_asterisk(s, acc, used, args)
   end
 end
 
 # Section 22.3.7
 
 def tilde_asterisk(s, acc, used, args)
+  if match = /^~(?<count>\d*)\*/.match(s)
+    n = match[:count].empty? ? 1 : match[:count].to_i
+    n.times { used << args.shift }
+    format_loop(match.post_match, acc, used, args)
+  else
+    tilde_colon_asterisk(s, acc, used, args)
+  end
+end
+
+def tilde_colon_asterisk(s, acc, used, args)
+  if match = /^~(?<count>\d*):\*/.match(s)
+    n = match[:count].empty? ? 1 : match[:count].to_i
+    n.times { args.unshift(used.pop) }
+    format_loop(match.post_match, acc, used, args)
+  else
+    tilde_at_asterisk(s, acc, used, args)
+  end
+end
+
+def tilde_at_asterisk(s, acc, used, args)
+  if match = /^~(?<index>\d*)@\*/.match(s)
+    i = match[:index].to_i
+    all_args = used + args
+    used, args = all_args[0...i], all_args[i..-1]
+    format_loop(match.post_match, acc, used, args)
+  else
+    raise ArgumentError, 'unimplmented format directive'
+  end
 end
