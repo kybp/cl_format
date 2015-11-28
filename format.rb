@@ -7,113 +7,117 @@ require_relative 'roman_numeral'
 
 class String
   def cl_format(*args)
-    format_loop(self, '', *args)
+    format_loop(self, '', [], args)
   end
 end
 
-def format_loop(s, acc, *args)
+def format_loop(s, acc, used, args)
   if s.nil? || s.empty?
     acc
   elsif s[0] != '~'
-    format_loop(s[1..-1], acc + s[0], *args)
+    format_loop(s[1..-1], acc + s[0], used, args)
   else
-    tilde_c(s, acc, *args)
+    tilde_c(s, acc, used, args)
   end
 end
 
 # Section 22.3.1
 
-def tilde_c(s, acc, *args)
+def tilde_c(s, acc, used, args)
   # currently ignores options
   if match = /^~:?@?c/i.match(s)
     arg = args.shift
+    used << arg
     if arg.is_a?(String) && arg.length == 1
-      format_loop(match.post_match, acc + arg, *args)
+      format_loop(match.post_match, acc + arg, used, args)
     else
       raise ArgumentError, '~C requires a character'
     end
   else
-    tilde_percent(s, acc, *args)
+    tilde_percent(s, acc, used, args)
   end
 end
 
-def tilde_percent(s, acc, *args)
+def tilde_percent(s, acc, used, args)
   if match = /^~(?<times>\d*)%/.match(s)
     acc += "\n" * (match[:times].empty? ? 1 : match[:times].to_i)
-    format_loop(match.post_match, acc, *args)
+    format_loop(match.post_match, acc, used, args)
   else
-    tilde_ampersand(s, acc, *args)
+    tilde_ampersand(s, acc, used, args)
   end
 end
 
-def tilde_ampersand(s, acc, *args)
+def tilde_ampersand(s, acc, used, args)
   if match = /^~(?<times>\d*)&/.match(s)
     times = match[:times].empty? ? 0 : match[:times].to_i - 1
     if match[:times] !~ /^0+$/
       acc += "\n" if acc[-1] != "\n"
       acc += "\n" * times
     end
-    format_loop(match.post_match, acc, *args)
+    format_loop(match.post_match, acc, used, args)
   else
-    tilde_vertical_bar(s, acc, *args)
+    tilde_vertical_bar(s, acc, used, args)
   end
 end
 
-def tilde_vertical_bar(s, acc, *args)
+def tilde_vertical_bar(s, acc, used, args)
   if match = /^~(?<times>\d*)\|/.match(s)
     acc += "\f" * (match[:times].empty? ? 1 : match[:times].to_i)
-    format_loop(match.post_match, acc, *args)
+    format_loop(match.post_match, acc, used, args)
   else
-    tilde_tilde(s, acc, *args)
+    tilde_tilde(s, acc, used, args)
   end
 end
 
-def tilde_tilde(s, acc, *args)
+def tilde_tilde(s, acc, used, args)
   if match = /^~(?<times>\d*)~/.match(s)
     acc += '~' * (match[:times].empty? ? 1 : match[:times].to_i)
-    format_loop(match.post_match, acc, *args)
+    format_loop(match.post_match, acc, used, args)
   else
-    tilde_r_roman(s, acc, *args)
+    tilde_r_roman(s, acc, used, args)
   end
 end
 
 # Section 22.3.2
 
-def tilde_r_roman(s, acc, *args)
+def tilde_r_roman(s, acc, used, args)
   if match = /^~(?<old>:?)@r/i.match(s)
     n = args.shift
+    used << n
     raise TypeError, 'Roman numeral not integer' unless n.is_a?(Integer)
     style = match[:old].empty? ? :new : :old
-    format_loop(match.post_match, acc + roman_numeral(n, style), *args)
+    format_loop(match.post_match, acc + roman_numeral(n, style), used, args)
   else
-    tilde_r_english(s, acc, *args)
+    tilde_r_english(s, acc, used, args)
   end
 end
 
-def tilde_r_english(s, acc, *args)
+def tilde_r_english(s, acc, used, args)
   if match = /^~(?<ordinal>:?)r/i.match(s)
     n = args.shift
+    used << n
     raise TypeError, 'English number not integer' unless n.is_a?(Integer)
     english = english_number(n, match[:ordinal].empty? ? :cardinal : :ordinal)
-    format_loop(match.post_match, acc + english, *args)
+    format_loop(match.post_match, acc + english, used, args)
   else
-    tilde_r(s, acc, *args)
+    tilde_r(s, acc, used, args)
   end
 end
 
-def tilde_r(s, acc, *args)
+def tilde_r(s, acc, used, args)
   if match = /^~(?<radix>\d*)(,(?<mincol>\d*)(,('(?<padchar>.))?\
 (,('(?<commachar>.))?(,(?<comma_interval>\d*))?)?)?)?(?<modifier>:?@?)r/i
              .match(s)
     if match[:radix].empty?
       simplified = "~#{match[:modifier]}r#{match.post_match}"
       if match[:modifier].include?('@')
-        tilde_r_roman(simplified, acc, *args)
+        tilde_r_roman(simplified, acc, used, args)
       else
-        tilde_r_english(simplified, acc, *args)
+        tilde_r_english(simplified, acc, used, args)
       end
     else
       n = args.shift
+      used << n
       radix = match[:radix].to_i
       mincol = match[:mincol].to_i
       padchar = match[:padchar].nil? ? ' ' : match[:padchar]
@@ -133,10 +137,10 @@ def tilde_r(s, acc, *args)
       force_sign = match[:modifier].include?('@')
       formatted = format_number(n, radix, mincol, padchar, commachar,
                                 comma_interval, use_commas, force_sign)
-      format_loop(match.post_match, acc + formatted, args)
+      format_loop(match.post_match, acc + formatted, used, args)
     end
   else
-    tilde_d(s, acc, *args)
+    tilde_d(s, acc, used, args)
   end
 end
 
@@ -155,34 +159,39 @@ def format_number(n, radix, mincol, padchar, commachar,
   (padchar * [mincol - result.length, 0].max) + result.join
 end
 
-def tilde_d(s, acc, *args)
+def tilde_d(s, acc, used, args)
   if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)d/.match(s)
-    tilde_r("~10,#{match[:args]}r#{match.post_match}", acc, *args)
+    tilde_r("~10,#{match[:args]}r#{match.post_match}", acc, used, args)
   else
-    tilde_b(s, acc, *args)
+    tilde_b(s, acc, used, args)
   end
 end
 
-def tilde_b(s, acc, *args)
+def tilde_b(s, acc, used, args)
   if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)b/.match(s)
-    tilde_r("~2,#{match[:args]}r#{match.post_match}", acc, *args)
+    tilde_r("~2,#{match[:args]}r#{match.post_match}", acc, used, args)
   else
-    tilde_o(s, acc, *args)
+    tilde_o(s, acc, used, args)
   end
 end
 
-def tilde_o(s, acc, *args)
+def tilde_o(s, acc, used, args)
   if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)o/.match(s)
-    tilde_r("~8,#{match[:args]}r#{match.post_match}", acc, *args)
+    tilde_r("~8,#{match[:args]}r#{match.post_match}", acc, used, args)
   else
-    tilde_x(s, acc, *args)
+    tilde_x(s, acc, used, args)
   end
 end
 
-def tilde_x(s, acc, *args)
+def tilde_x(s, acc, used, args)
   if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)x/.match(s)
-    tilde_r("~16,#{match[:args]}r#{match.post_match}", acc, *args)
+    tilde_r("~16,#{match[:args]}r#{match.post_match}", acc, used, args)
   else
     raise ArgumentError, 'unimplmented format directive'
   end
+end
+
+# Section 22.3.7
+
+def tilde_asterisk(s, acc, used, args)
 end
