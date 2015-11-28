@@ -1,5 +1,10 @@
-def english_number(n)
-  (n < 0 ? 'negative ' : '') + ordinal_number(n)
+def english_number(n, style)
+  (n < 0 ? 'negative ' : '') +
+    case style
+    when :ordinal;  ordinal_number(n)
+    when :cardinal; cardinal_number(n)
+    else raise ArgumentError
+    end
 end
 
 def ordinal_factor(n, name, factor)
@@ -73,5 +78,28 @@ def simple_ordinal(n, prefix='')
              when 90; 'ninety'
              else raise ArgumentError
              end
+  end
+end
+
+def cardinal_number(n)
+  case n
+  when 1; 'first'
+  when 2; 'second'
+  when 3; 'third'
+  when 4; 'fourth'
+  when 5; 'fifth'
+  when 8; 'eighth'
+  when 9; 'ninth'
+  when 12; 'twelfth'
+  else
+    if n > 10 && n < 100 && n % 10 == 0
+      simple_ordinal(n)[0..-2] + 'ieth'
+    elsif n >= 20 && n < 100
+      simple_ordinal(n / 10 * 10) + '-' + cardinal_number(n % 10)
+    elsif n > 100
+      rem = n % 100
+      ordinal_number(n / 100 * 100) +
+        (rem.zero? ? 'th' : ' ' + cardinal_number(rem))
+    end
   end
 end
