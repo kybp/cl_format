@@ -32,7 +32,6 @@ def roman_numeral_helper(n, style, acc)
   elsif n >= 4   && style == :new
     roman_numeral_helper(n - 4,    style, acc + 'IV')
   else
-    n.times { acc += 'I' }
-    acc
+    acc + 'I' * n
   end
 end
