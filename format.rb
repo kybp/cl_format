@@ -1,6 +1,10 @@
 require_relative 'english_number'
 require_relative 'roman_numeral'
 
+# 'Section <section>' comments refer to the relevant sections of the
+# HyperSpec, located at:
+# http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm
+
 class String
   def cl_format(*args)
     format_loop(self, '', *args)
@@ -16,6 +20,8 @@ def format_loop(s, acc, *args)
     tilde_c(s, acc, *args)
   end
 end
+
+# Section 22.3.1
 
 def tilde_c(s, acc, *args)
   # currently ignores options
@@ -70,6 +76,8 @@ def tilde_tilde(s, acc, *args)
     tilde_r_roman(s, acc, *args)
   end
 end
+
+# Section 22.3.2
 
 def tilde_r_roman(s, acc, *args)
   if match = /^~(?<old>:?)@r/i.match(s)
