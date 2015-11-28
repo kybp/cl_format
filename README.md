@@ -5,8 +5,7 @@ Ruby. It will aim to be as complete as makes sense.
 
 FORMAT is described fully in the
 [HyperSpec](http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm)
-Currently section 22.3.1 of the HyperSpec is implemented except for ~C
-modifiers. Fully implemented sections:
+Currently implemented:
 
 - [22.3.1](http://www.lispworks.com/documentation/HyperSpec/Body/22_ca.htm)
   (except for ~C modifiers)
