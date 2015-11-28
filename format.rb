@@ -221,6 +221,31 @@ module CLFormat
       args[:used], args[:left] = all_args[0...i], all_args[i..-1]
       format_loop(args.merge(string: match.post_match))
     else
+      tilde_newline(args)
+    end
+  end
+
+  def tilde_newline(args)
+    if match = /\A~\n\s*/m.match(args[:string])
+      format_loop(args.merge(string: match.post_match))
+    else
+      tilde_at_newline(args)
+    end
+  end
+
+  def tilde_at_newline(args)
+    if match = /\A~@\n\s*/m.match(args[:string])
+      format_loop(args.merge(string: match.post_match,
+                             acc: args[:acc] + "\n"))
+    else
+      tilde_colon_newline(args)
+    end
+  end
+
+  def tilde_colon_newline(args)
+    if match = /\A~:\n/m.match(args[:string])
+      format_loop(args.merge(string: match.post_match))
+    else
       raise ArgumentError, 'unimplmented format directive'
     end
   end
