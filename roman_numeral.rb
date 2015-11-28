@@ -1,6 +1,6 @@
 def roman_numeral(n, style=:new)
   if n <= 0 || style == :new && n >= 4000 || style == :old && n >= 5000
-    raise ArgumentError, '#{n} out of range for Roman numeral'
+    raise ArgumentError, "#{n} out of range for Roman numeral"
   else
     roman_numeral_helper(n, style, '')
   end
