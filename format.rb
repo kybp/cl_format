@@ -151,6 +151,30 @@ def tilde_d(s, acc, *args)
   if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)d/.match(s)
     tilde_r("~10,#{match[:args]}r#{match.post_match}", acc, *args)
   else
+    tilde_b(s, acc, *args)
+  end
+end
+
+def tilde_b(s, acc, *args)
+  if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)b/.match(s)
+    tilde_r("~2,#{match[:args]}r#{match.post_match}", acc, *args)
+  else
+    tilde_o(s, acc, *args)
+  end
+end
+
+def tilde_o(s, acc, *args)
+  if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)o/.match(s)
+    tilde_r("~8,#{match[:args]}r#{match.post_match}", acc, *args)
+  else
+    tilde_x(s, acc, *args)
+  end
+end
+
+def tilde_x(s, acc, *args)
+  if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)x/.match(s)
+    tilde_r("~16,#{match[:args]}r#{match.post_match}", acc, *args)
+  else
     raise ArgumentError, 'unimplmented format directive'
   end
 end
