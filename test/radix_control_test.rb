@@ -1,4 +1,4 @@
-require_relative './format'
+require_relative '../format'
 require 'minitest/autorun'
 
 class RadixControlTest < MiniTest::Test
