@@ -1,10 +1,6 @@
 require_relative 'english_number'
 require_relative 'roman_numeral'
 
-# 'Section <section>' comments refer to the relevant sections of the
-# HyperSpec, located at:
-# http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm
-
 module CLFormat
   def format_loop(args)
     if args[:string].nil? || args[:string].empty?
@@ -16,8 +12,6 @@ module CLFormat
       tilde_c(args)
     end
   end
-
-  # Section 22.3.1
 
   def tilde_c(args)
     # currently ignores options
@@ -74,8 +68,6 @@ module CLFormat
       tilde_r_roman(args)
     end
   end
-
-  # Section 22.3.2
 
   def tilde_r_roman(args)
     if match = /^~(?<old>:?)@r/i.match(args[:string])
@@ -192,8 +184,6 @@ module CLFormat
     end
   end
 
-  # Section 22.3.7
-
   def tilde_asterisk(args)
     if match = /^~(?<count>\d*)\*/.match(args[:string])
       n = match[:count].empty? ? 1 : match[:count].to_i
@@ -246,7 +236,30 @@ module CLFormat
     if match = /\A~:\n/m.match(args[:string])
       format_loop(args.merge(string: match.post_match))
     else
-      raise ArgumentError, 'unimplmented format directive'
+      tilde_p(args)
     end
+  end
+
+  def tilde_p(args)
+    if match = /^~p/i.match(args[:string])
+      arg = args[:left].shift
+      args[:used] << arg
+      args[:acc] << 's' unless arg.to_i == 1
+      format_loop(args.merge(string: match.post_match))
+    else
+      tilde_colon_p(args)
+    end
+  end
+
+  def tilde_colon_p(args)
+    if match = /^~:p/i.match(args[:string])
+      tilde_colon_asterisk(args.merge(string: "~:*~p#{match.post_match}"))
+    else
+      unimplimented(args)
+    end
+  end
+
+  def unimplimented(args)
+    raise ArgumentError, 'unimplmented format directive'
   end
 end
