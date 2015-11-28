@@ -42,6 +42,14 @@ class RadixControlTest < MiniTest::Test
     assert_equal('DEAD_BEEF', "~16,,,'_,4:r".cl_format(3735928559))
   end
 
+  def test_tilde_r_default_padding
+    assert_equal('    5', '~5d'.cl_format(5))
+  end
+
+  def test_tilde_r_insignficant_padding
+    assert_equal('123', '~2d'.cl_format(123))
+  end
+
   def test_tilde_d
     assert_equal("~10,12,'x,'o,1:@r".cl_format(12345),
                     "~12,'x,'o,1:@d".cl_format(12345))
