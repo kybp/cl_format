@@ -1,3 +1,4 @@
+require_relative 'english_number'
 require_relative 'roman_numeral'
 
 class String
@@ -32,7 +33,20 @@ end
 
 def tilde_percent(s, acc, *args)
   if match = /^~(?<times>\d*)%/.match(s)
-    (match[:times].empty? ? 1 : match[:times].to_i).times { acc += "\n" }
+    acc += "\n" * (match[:times].empty? ? 1 : match[:times].to_i)
+    format_loop(match.post_match, acc, *args)
+  else
+    tilde_ampersand(s, acc, *args)
+  end
+end
+
+def tilde_ampersand(s, acc, *args)
+  if match = /^~(?<times>\d*)&/.match(s)
+    times = match[:times].empty? ? 0 : match[:times].to_i - 1
+    if match[:times] !~ /^0+$/
+      acc += "\n" if acc[-1] != "\n"
+      acc += "\n" * times
+    end
     format_loop(match.post_match, acc, *args)
   else
     tilde_vertical_bar(s, acc, *args)
@@ -41,7 +55,7 @@ end
 
 def tilde_vertical_bar(s, acc, *args)
   if match = /^~(?<times>\d*)\|/.match(s)
-    (match[:times].empty? ? 1 : match[:times].to_i).times { acc += "\f" }
+    acc += "\f" * (match[:times].empty? ? 1 : match[:times].to_i)
     format_loop(match.post_match, acc, *args)
   else
     tilde_tilde(s, acc, *args)
@@ -50,33 +64,93 @@ end
 
 def tilde_tilde(s, acc, *args)
   if match = /^~(?<times>\d*)~/.match(s)
-    (match[:times].empty? ? 1 : match[:times].to_i).times { acc += '~' }
+    acc += '~' * (match[:times].empty? ? 1 : match[:times].to_i)
     format_loop(match.post_match, acc, *args)
   else
-    tilde_at_r(s, acc, *args)
+    tilde_r_roman(s, acc, *args)
   end
 end
 
-def tilde_at_r(s, acc, *args)
-  if match = /^~@r/i.match(s)
+def tilde_r_roman(s, acc, *args)
+  if match = /^~(?<old>:?)@r/i.match(s)
     n = args.shift
-    raise ArgumentError, 'roman numeral not integer' unless n.is_a?(Integer)
-    format_loop(match.post_match, acc + roman_numeral(n), *args)
+    raise TypeError, 'Roman numeral not integer' unless n.is_a?(Integer)
+    style = match[:old].empty? ? :new : :old
+    format_loop(match.post_match, acc + roman_numeral(n, style), *args)
   else
-    tilde_colon_at_r(s, acc, *args)
+    tilde_r_english(s, acc, *args)
   end
 end
 
-def tilde_colon_at_r(s, acc, *args)
-  if match = /^~:@r/i.match(s)
+def tilde_r_english(s, acc, *args)
+  if match = /^~(?<ordinal>:?)r/i.match(s)
     n = args.shift
-    raise ArgumentError, 'roman numeral not integer' unless n.is_a?(Integer)
-    format_loop(match.post_match, acc + roman_numeral(n, :old), *args)
+    raise TypeError, 'English number not integer' unless n.is_a?(Integer)
+    english = english_number(n, match[:ordinal].empty? ? :cardinal : :ordinal)
+    format_loop(match.post_match, acc + english, *args)
+  else
+    tilde_r(s, acc, *args)
+  end
+end
+
+def tilde_r(s, acc, *args)
+  if match = /^~(?<radix>\d*)(,(?<mincol>\d*)(,('(?<padchar>.))?\
+(,('(?<commachar>.))?(,(?<comma_interval>\d*))?)?)?)?(?<modifier>:?@?)r/i
+             .match(s)
+    if match[:radix].empty?
+      simplified = "~#{match[:modifier]}r#{match.post_match}"
+      if match[:modifier].include?('@')
+        tilde_r_roman(simplified, acc, *args)
+      else
+        tilde_r_english(simplified, acc, *args)
+      end
+    else
+      n = args.shift
+      radix = match[:radix].to_i
+      mincol = match[:mincol].to_i
+      padchar = match[:padchar].nil? ? '' : match[:padchar]
+      commachar =
+        if match[:commachar].nil? || match[:commachar].empty?
+          ','
+        else
+          match[:commachar]
+        end
+      comma_interval =
+        if match[:comma_interval].nil? || match[:comma_interval].empty?
+          3
+        else
+          match[:comma_interval].to_i
+        end
+      use_commas = match[:modifier].include?(':')
+      force_sign = match[:modifier].include?('@')
+      formatted = format_number(n, radix, mincol, padchar, commachar,
+                                comma_interval, use_commas, force_sign)
+      format_loop(match.post_match, acc + formatted, args)
+    end
+  else
+    tilde_d(s, acc, *args)
+  end
+end
+
+def format_number(n, radix, mincol, padchar, commachar,
+                  comma_interval, use_commas, force_sign)
+  result = []
+  str = n.abs.to_s(radix).upcase
+  str.reverse.split('').each_with_index do |x, i|
+    result.unshift(x)
+    if use_commas && (i + 1) % comma_interval == 0
+      result.unshift(commachar) unless i + 1 == str.length
+    end
+  end
+  result.unshift('+') if n >= 0 && force_sign
+  result.unshift('-') if n <  0
+  (padchar * [mincol - result.length, 0].max) + result.join
+end
+
+def tilde_d(s, acc, *args)
+  if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)d/.match(s)
+    tilde_r("~10,#{match[:args]}r#{match.post_match}", acc, *args)
   else
     raise ArgumentError, 'unimplmented format directive'
   end
 end
-
-# def tilde-a(s)
-#   /^~(?<mincol>\d*),(?<colinc>\d*),(?<minpad>\d*),'(?<padchar>.)[aA]/ =~ s
-# end

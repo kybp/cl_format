@@ -1,50 +1,50 @@
 def english_number(n, style)
   (n < 0 ? 'negative ' : '') +
     case style
-    when :ordinal;  ordinal_number(n)
-    when :cardinal; cardinal_number(n)
+    when :ordinal;  ordinal_number(n.abs)
+    when :cardinal; cardinal_number(n.abs)
     else raise ArgumentError
     end
 end
 
-def ordinal_factor(n, name, factor)
-  ordinal_number(n / factor) + " #{name}" + ordinal_number(n % factor, ' ')
+def cardinal_factor(n, name, factor)
+  cardinal_number(n / factor) + " #{name}" + cardinal_number(n % factor, ' ')
 end
 
-def ordinal_number(n, prefix='')
+def cardinal_number(n, prefix='')
   return prefix.empty? ? 'zero' : '' if n.zero?
 
   prefix + if false
   elsif n >= 1_000_000_000_000_000_000_000_000_000_000
-    ordinal_factor(n, 'nonillion',   1_000_000_000_000_000_000_000_000_000_000)
+    cardinal_factor(n, 'nonillion',   1_000_000_000_000_000_000_000_000_000_000)
   elsif n >= 1_000_000_000_000_000_000_000_000_000
-    ordinal_factor(n, 'octillion',   1_000_000_000_000_000_000_000_000_000)
+    cardinal_factor(n, 'octillion',   1_000_000_000_000_000_000_000_000_000)
   elsif n >= 1_000_000_000_000_000_000_000_000
-    ordinal_factor(n, 'septillion',  1_000_000_000_000_000_000_000_000)
+    cardinal_factor(n, 'septillion',  1_000_000_000_000_000_000_000_000)
   elsif n >= 1_000_000_000_000_000_000_000
-    ordinal_factor(n, 'sextillion',  1_000_000_000_000_000_000_000)
+    cardinal_factor(n, 'sextillion',  1_000_000_000_000_000_000_000)
   elsif n >= 1_000_000_000_000_000_000
-    ordinal_factor(n, 'quintillion', 1_000_000_000_000_000_000)
+    cardinal_factor(n, 'quintillion', 1_000_000_000_000_000_000)
   elsif n >= 1_000_000_000_000_000
-    ordinal_factor(n, 'quadrillion', 1_000_000_000_000_000)
+    cardinal_factor(n, 'quadrillion', 1_000_000_000_000_000)
   elsif n >= 1_000_000_000_000
-    ordinal_factor(n, 'trillion',    1_000_000_000_000)
+    cardinal_factor(n, 'trillion',    1_000_000_000_000)
   elsif n >= 1_000_000_000
-    ordinal_factor(n, 'billion',     1_000_000_000)
+    cardinal_factor(n, 'billion',     1_000_000_000)
   elsif n >= 1_000_000
-    ordinal_factor(n, 'million',     1_000_000)
+    cardinal_factor(n, 'million',     1_000_000)
   elsif n >= 1000
-    ordinal_factor(n, 'thousand',    1000)
+    cardinal_factor(n, 'thousand',    1000)
   elsif n >= 100
-    ordinal_factor(n, 'hundred',     100)
+    cardinal_factor(n, 'hundred',     100)
   elsif n >= 20
-    simple_ordinal(n / 10 * 10) + simple_ordinal(n % 10, '-')
+    simple_cardinal(n / 10 * 10) + simple_cardinal(n % 10, '-')
   else
-    simple_ordinal(n)
+    simple_cardinal(n)
   end
 end
 
-def simple_ordinal(n, prefix='')
+def simple_cardinal(n, prefix='')
   if n.zero?
     ''
   else
@@ -81,7 +81,7 @@ def simple_ordinal(n, prefix='')
   end
 end
 
-def cardinal_number(n)
+def ordinal_number(n)
   case n
   when 1; 'first'
   when 2; 'second'
@@ -93,13 +93,15 @@ def cardinal_number(n)
   when 12; 'twelfth'
   else
     if n > 10 && n < 100 && n % 10 == 0
-      simple_ordinal(n)[0..-2] + 'ieth'
+      simple_cardinal(n)[0..-2] + 'ieth'
     elsif n >= 20 && n < 100
-      simple_ordinal(n / 10 * 10) + '-' + cardinal_number(n % 10)
+      simple_cardinal(n / 10 * 10) + '-' + ordinal_number(n % 10)
     elsif n > 100
       rem = n % 100
-      ordinal_number(n / 100 * 100) +
-        (rem.zero? ? 'th' : ' ' + cardinal_number(rem))
+      cardinal_number(n / 100 * 100) +
+        (rem.zero? ? 'th' : ' ' + ordinal_number(rem))
+    else
+      cardinal_number(n) + 'th'
     end
   end
 end
