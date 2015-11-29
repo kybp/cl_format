@@ -15,6 +15,8 @@ implementation requires the conventional order.
   (except for ~C modifiers)
 - [22.3.2: Radix Control]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cb.htm)
+- [22.3.3.1: Fixed-Format Floating-Point]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cca.htm)
 - [22.3.4.1: Aesthetic]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cda.htm)
   (the : modifier is intentionally omitted)
