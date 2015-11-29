@@ -110,8 +110,8 @@ module CLFormat
           end
         use_commas = match[:modifier].include?(':')
         force_sign = match[:modifier].include?('@')
-        formatted = format_number(n, radix, mincol, padchar, commachar,
-                                  comma_interval, use_commas, force_sign)
+        formatted  = format_number(n, radix, mincol, padchar, commachar,
+                                   comma_interval, use_commas, force_sign)
         format_loop(args.merge(string: match.post_match,
                                acc: args[:acc] + formatted))
       end
@@ -136,9 +136,8 @@ module CLFormat
   end
 
   def tilde_r_shortcuts(args)
-    if match = /^~(?<args>\d*(,(('.)?(,(('.)?(,\d*)?)?)?)?)?:?@?)\
-(?<directive>[dbox])/
-               .match(args[:string])
+    if match = /^~(?<args>\d*(,('.)?(,('.)?(,\d*)?)?)?:?@?)\
+(?<directive>[dbox])/i.match(args[:string])
       base = case match[:directive].downcase
              when 'd'; 10
              when 'b'; 2
@@ -148,7 +147,63 @@ module CLFormat
       tilde_r(args.
                merge(string: "~#{base},#{match[:args]}r#{match.post_match}"))
     else
+      tilde_f(args)
+    end
+  end
+
+  def given?(s)
+    !(s.nil? || s.empty?)
+  end
+
+  def tilde_f(args)
+    if match = /^~(?<w>\d*)(,(?<d>\d*)(,(?<k>\d*)\
+(,('(?<overflowchar>.))?(,('(?<padchar>.))?)?)?)?)?\
+(?<modifier>@?)f/i.match(args[:string])
+      arg = args[:left].shift
+      args[:used] << arg
+      w = given?(match[:w]) ? match[:w].to_i : nil
+      d = given?(match[:d]) ? match[:d].to_i : nil
+      k = match[:k].to_i
+      overflowchar = match[:overflowchar] || nil
+      padchar      = match[:padchar]      || ' '
+      force_sign   = match[:modifier].include?('@')
+      format_flonum(arg.to_f, w, d, k, overflowchar, padchar, force_sign)
+    else
       tilde_a_s(args)
+    end
+  end
+
+  def format_flonum(arg, w, d, k, overflowchar, padchar, force_sign)
+    return arg.to_s if w.nil? && d.nil?
+
+    n = arg * 10 ** k
+    c, m = n.to_i, (n % 1).to_f
+
+    if c.zero? && w == d + 1
+      result = m.to_s[1..-1]
+      if result.length - 1 < w
+        return result + '0' * (w - result.length)
+      else
+        return result[0..w]
+      end
+    end
+
+    result = c.to_s + '.'
+    result = '+' + result if force_sign && c >= 0
+
+    if d
+      m_str = m.round(d).to_s[2..-1] || ''
+      result += "#{m_str}"
+      result += '0' * [0, d - m_str.length].max
+    else
+      max_d = [0, w - result.length].max
+      result += m.round(max_d).to_s[2..-1]
+    end
+
+    if result.length > w && overflowchar
+      overflowchar * w
+    else
+      padchar * [0, w - result.length].max + result
     end
   end
 

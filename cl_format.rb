@@ -1,7 +1,8 @@
 RubyVM::InstructionSequence
   .compile_file('format.rb',
                 tailcall_optimization: true,
-                trace_instruction: false).eval
+                trace_instruction:     false)
+  .eval
 
 class String
   include CLFormat
