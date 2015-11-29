@@ -167,20 +167,20 @@ module CLFormat
       overflowchar = match[:overflowchar] || nil
       padchar      = match[:padchar]      || ' '
       force_sign   = match[:modifier].include?('@')
-      formatted    = format_flonum(arg.to_f, w, d, k, overflowchar,
+      formatted    = format_flonum(arg.to_f, 0, w, d, k, overflowchar,
                                    padchar, force_sign)
       format_loop(args.merge(string: match.post_match,
                              acc: args[:acc] + formatted))
     else
-      tilde_a_s(args)
+      tilde_dollarsign(args)
     end
   end
 
-  def format_flonum(arg, w, d, k, overflowchar, padchar, force_sign)
+  def format_flonum(arg, n, w, d, k, overflowchar, padchar, force_sign)
     return arg.to_s if w.nil? && d.nil?
 
-    n = arg * 10 ** k
-    c, m = n.to_i, (n % 1).to_f
+    scaled = arg * 10 ** k
+    c, m = scaled.to_i, (scaled % 1).to_f
 
     if c.zero? && w == d + 1
       result = m.to_s[1..-1]
@@ -191,7 +191,8 @@ module CLFormat
       end
     end
 
-    result = c.to_s + '.'
+    result = c.to_s
+    result = '0' * [0, n - result.length].max + "#{result}."
     result = '+' + result if force_sign && c >= 0
 
     if d
@@ -207,6 +208,34 @@ module CLFormat
       overflowchar * w
     else
       padchar * [0, w - result.length].max + result
+    end
+  end
+
+  def tilde_dollarsign(args)
+    if match = /^~(?<d>\d*)(,(?<n>\d*)(,(?<w>\d*)(,('(?<padchar>.))?\
+)?)?)?(?<modifier>:?@?)\$/.match(args[:string])
+      arg = args[:left].shift
+      args[:used] << arg
+      d = given?(match[:d]) ? match[:d].to_i : 2
+      n = given?(match[:n]) ? match[:n].to_i : 1
+      w = match[:w].to_i
+      padchar = match[:padchar] || ' '
+      force_sign = match[:modifier].include?('@')
+      if match[:modifier].include?(':')
+        f = arg.to_f
+        sign = f < 0 ? '-' : force_sign ? '+' : ''
+        formatted = format_flonum(f, n, [0, w - 1].max, d, 0, nil,
+                                  padchar, false)
+        format_loop(args.merge(string: match.post_match,
+                               acc: args[:acc] + sign + formatted))
+      else
+        formatted = format_flonum(arg.to_f, n, w, d, 0, nil,
+                                  padchar, force_sign)
+        format_loop(args.merge(string: match.post_match,
+                               acc: args[:acc] + formatted))
+      end
+    else
+      tilde_a_s(args)
     end
   end
 

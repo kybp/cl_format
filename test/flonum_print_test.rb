@@ -32,4 +32,16 @@ class FlonumPrintTest < MiniTest::Test
   def test_tilde_f_newline
     assert_equal("xxx\n", "~3,4,,'xf~%".cl_format(1))
   end
+
+  def test_tilde_dollarsign
+    assert_equal('3.00', '~$'.cl_format(3))
+  end
+
+  def test_tilde_dollarsign_n
+    assert_equal('003.00', '~,3$'.cl_format(3))
+  end
+
+  def test_tilde_dollarsign_full
+    assert_equal('+xxxx003.2', "~1,3,10,'x:@$".cl_format(3.19))
+  end
 end
