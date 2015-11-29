@@ -136,7 +136,8 @@ module CLFormat
   end
 
   def tilde_r_shortcuts(args)
-    if match = /^~(?<args>\d*(,('.(,('.(,\d*)?)?)?)?)?:?@?)(?<directive>[dbox])/
+    if match = /^~(?<args>\d*(,(('.)?(,(('.)?(,\d*)?)?)?)?)?:?@?)\
+(?<directive>[dbox])/
                .match(args[:string])
       base = case match[:directive].downcase
              when 'd'; 10
