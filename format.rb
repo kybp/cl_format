@@ -167,7 +167,10 @@ module CLFormat
       overflowchar = match[:overflowchar] || nil
       padchar      = match[:padchar]      || ' '
       force_sign   = match[:modifier].include?('@')
-      format_flonum(arg.to_f, w, d, k, overflowchar, padchar, force_sign)
+      formatted    = format_flonum(arg.to_f, w, d, k, overflowchar,
+                                   padchar, force_sign)
+      format_loop(args.merge(string: match.post_match,
+                             acc: args[:acc] + formatted))
     else
       tilde_a_s(args)
     end

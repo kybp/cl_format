@@ -28,4 +28,8 @@ class FlonumPrintTest < MiniTest::Test
   def test_tilde_f_drop_leading_zero
     assert_equal('.11', '~3,2f'.cl_format(0.11))
   end
+
+  def test_tilde_f_newline
+    assert_equal("xxx\n", "~3,4,,'xf~%".cl_format(1))
+  end
 end
