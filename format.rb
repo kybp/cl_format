@@ -255,6 +255,25 @@ module CLFormat
     if match = /^~:p/i.match(args[:string])
       tilde_colon_asterisk(args.merge(string: "~:*~p#{match.post_match}"))
     else
+      tilde_at_p(args)
+    end
+  end
+
+  def tilde_at_p(args)
+    if match = /^~@p/i.match(args[:string])
+      arg = args[:left].shift
+      args[:used] << arg
+      args[:acc] << (arg.to_i == 1 ? 'y' : 'ies')
+      format_loop(args.merge(string: match.post_match))
+    else
+      tilde_colon_at_p(args)
+    end
+  end
+
+  def tilde_colon_at_p(args)
+    if match = /^~:@p/i.match(args[:string])
+      tilde_colon_asterisk(args.merge(string: "~:*~@p#{match.post_match}"))
+    else
       unimplimented(args)
     end
   end
