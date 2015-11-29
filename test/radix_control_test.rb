@@ -50,6 +50,10 @@ class RadixControlTest < MiniTest::Test
     assert_equal('123', '~2d'.cl_format(123))
   end
 
+  def test_tilde_d_simple
+    assert_equal("~10r".cl_format(312), "~d".cl_format(312))
+  end
+
   def test_tilde_d
     assert_equal("~10,12,'x,'o,1:@r".cl_format(12345),
                     "~12,'x,'o,1:@d".cl_format(12345))

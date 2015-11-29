@@ -133,7 +133,7 @@ module CLFormat
                                acc: args[:acc] + formatted))
       end
     else
-      tilde_d(args)
+      tilde_r_shortcuts(args)
     end
   end
 
@@ -152,33 +152,17 @@ module CLFormat
     (padchar * [mincol - result.length, 0].max) + result.join
   end
 
-  def tilde_d(args)
-    if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)d/.match(args[:string])
-      tilde_r(args.merge(string: "~10,#{match[:args]}r#{match.post_match}"))
-    else
-      tilde_b(args)
-    end
-  end
-
-  def tilde_b(args)
-    if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)b/.match(args[:string])
-      tilde_r(args.merge(string: "~2,#{match[:args]}r#{match.post_match}"))
-    else
-      tilde_o(args)
-    end
-  end
-
-  def tilde_o(args)
-    if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)o/.match(args[:string])
-      tilde_r(args.merge(string: "~8,#{match[:args]}r#{match.post_match}"))
-    else
-      tilde_x(args)
-    end
-  end
-
-  def tilde_x(args)
-    if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)x/.match(args[:string])
-      tilde_r(args.merge(string: "~16,#{match[:args]}r#{match.post_match}"))
+  def tilde_r_shortcuts(args)
+    if match = /^~(?<args>\d*(,('.(,('.(,\d*)?)?)?)?)?:?@?)(?<directive>[dbox])/
+               .match(args[:string])
+      base = case match[:directive].downcase
+             when 'd'; 10
+             when 'b'; 2
+             when 'o'; 8
+             when 'x'; 16
+             end
+      tilde_r(args.
+               merge(string: "~#{base},#{match[:args]}r#{match.post_match}"))
     else
       tilde_a_s(args)
     end
