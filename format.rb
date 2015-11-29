@@ -180,7 +180,35 @@ module CLFormat
     if match = /^~(?<args>\d*(,.*?(,.*?(,.*?)?)?)?:?@?)x/.match(args[:string])
       tilde_r(args.merge(string: "~16,#{match[:args]}r#{match.post_match}"))
     else
+      tilde_a_s(args)
+    end
+  end
+
+  def tilde_a_s(args)
+    if match = /^~(?<mincol>\d*)(,(?<colinc>\d*)(,(?<minpad>\d*)\
+(,('(?<padchar>.))?)?)?)?(?<modifier>@?)(?<directive>[as])/i
+               .match(args[:string])
+      arg = args[:left].shift
+      args[:used] << arg
+      mincol    = match[:mincol].to_i
+      colinc    = match[:colinc] ? match[:colinc].to_i : 1
+      minpad    = match[:minpad].to_i
+      padchar   = match[:padchar].nil? ? ' ' : match[:padchar]
+      insert_on = match[:modifier].include?('@') ? :left : :right
+      obj = match[:directive] =~ /[Aa]/ ? arg.to_s : arg.inspect
+      format_object(obj, mincol, colinc, minpad, padchar, insert_on)
+    else
       tilde_asterisk(args)
+    end
+  end
+
+  def format_object(obj_str, mincol, colinc, minpad, padchar, insert_on)
+    pad = padchar * minpad
+    pad += padchar * colinc while obj_str.length + pad.length < mincol
+    case insert_on
+    when :left;  pad + obj_str
+    when :right; obj_str + pad
+    else raise ArgumentError, 'insert_on must be one of :left or :right'
     end
   end
 
