@@ -25,13 +25,14 @@ module CLFormat
         raise ArgumentError, '~C requires a character'
       end
     else
-      tilde_percent(args)
+      char_with_repeat(args)
     end
   end
 
-  def tilde_percent(args)
-    if match = /^~(?<times>\d*)%/.match(args[:string])
-      args[:acc] += "\n" * (match[:times].empty? ? 1 : match[:times].to_i)
+  def char_with_repeat(args)
+    if match = /^~(?<times>\d*)(?<directive>[|%~])/.match(args[:string])
+      char = { '|' => "\f", '%' => "\n", '~' => '~' }[match[:directive]]
+      args[:acc] += char * (match[:times].empty? ? 1 : match[:times].to_i)
       format_loop(args.merge(string: match.post_match))
     else
       tilde_ampersand(args)
@@ -45,24 +46,6 @@ module CLFormat
         args[:acc] += "\n" if args[:acc][-1] != "\n"
         args[:acc] += "\n" * times
       end
-      format_loop(args.merge(string: match.post_match))
-    else
-      tilde_vertical_bar(args)
-    end
-  end
-
-  def tilde_vertical_bar(args)
-    if match = /^~(?<times>\d*)\|/.match(args[:string])
-      args[:acc] += "\f" * (match[:times].empty? ? 1 : match[:times].to_i)
-      format_loop(args.merge(string: match.post_match))
-    else
-      tilde_tilde(args)
-    end
-  end
-
-  def tilde_tilde(args)
-    if match = /^~(?<times>\d*)~/.match(args[:string])
-      args[:acc] += '~' * (match[:times].empty? ? 1 : match[:times].to_i)
       format_loop(args.merge(string: match.post_match))
     else
       tilde_r_roman(args)
