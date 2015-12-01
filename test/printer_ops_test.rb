@@ -1,5 +1,4 @@
-require_relative '../cl_format'
-require 'minitest/autorun'
+require 'test_helper'
 
 class PrinterOpsTest < MiniTest::Test
   def test_tilde_a_plain_string

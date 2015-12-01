@@ -1,4 +1,4 @@
-require_relative '../cl_format'
+require 'test_helper'
 
 class FlonumPrintTest < MiniTest::Test
   def test_tilde_f_plain

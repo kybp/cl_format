@@ -1,5 +1,4 @@
-require_relative '../cl_format'
-require 'minitest/autorun'
+require 'test_helper'
 
 class ControlFlowTest < MiniTest::Test
   def test_tilde_asterisk
