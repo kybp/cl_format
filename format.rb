@@ -319,6 +319,34 @@ module CLFormat
     if match = /\A~:\n/m.match(args[:string])
       format_loop(args.merge(string: match.post_match))
     else
+      tilde_left_paren(args)
+    end
+  end
+
+  def tilde_left_paren(args)
+    if match = /^~(?<modifier>:?@?)\(/.match(args[:string])
+      rest = match.post_match.sub(/(.*?)(~~)*~\)/) do
+        if match[:modifier].include?(':') &&
+           match[:modifier].include?('@')
+          $1.upcase
+        elsif match[:modifier].include?(':')
+          $1.split.map(&:capitalize).join(' ')
+        elsif match[:modifier].include?('@')
+          $1.downcase.sub(/[a-zA-Z]/, &:upcase)
+        else
+          $1.downcase
+        end
+      end
+      format_loop(args.merge(string: rest))
+    else
+      tilde_right_paren(args)
+    end
+  end
+
+  def tilde_right_paren(args)
+    if args[:string] =~ /^~\)/
+      raise ArgumentError, 'unmatched "~)"'
+    else
       tilde_p(args)
     end
   end
