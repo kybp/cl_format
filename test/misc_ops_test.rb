@@ -1,10 +1,6 @@
 require 'test_helper'
 
 class MiscOpsTest < MiniTest::Test
-  def test_a
-    assert_equal(true, false)
-  end
-
   def test_tilde_p_with_s
     assert_equal('rabbits', 'rabbit~p'.cl_format(2))
   end
