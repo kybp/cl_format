@@ -19,12 +19,9 @@ implementation requires the conventional order.
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cca.htm)
 - [22.3.3.4: Monetary Floating-Point]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_ccd.htm)
-- [22.3.4.1: Aesthetic]
-  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cda.htm)
-  (the : modifier is intentionally omitted)
-- [22.3.4.2: Standard]
-  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cdb.htm)
-  (the : modifier is intentionally omitted)
+- [22.3.4: Printer Operations]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cd.htm)
+  (Omitted: ~W and the : modifier for ~A and ~S)
 - [22.3.7.1: Go-To]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
 - [22.3.8: Miscellaneous Operations]
