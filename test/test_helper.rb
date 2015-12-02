@@ -6,7 +6,6 @@ SimpleCov.start do
   command_name 'MiniTest'
 end
 
-require_relative '../format'
 require_relative '../cl_format'
 
 class BrightReporter < MiniTest::Reporters::DefaultReporter
