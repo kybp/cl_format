@@ -1,6 +1,30 @@
 require 'test_helper'
 
 class MiscOpsTest < MiniTest::Test
+  def test_tilde_left_paren
+    assert_equal('hi hi hi hi', '~(hi hI Hi HI~)'.cl_format)
+  end
+
+  def test_tilde_colon_left_paren
+    assert_equal('Hi Hi Hi Hi', '~:(hi hI Hi HI~)'.cl_format)
+  end
+
+  def test_tilde_at_left_paren
+    assert_equal('Hi hi hi hi', '~@(hi hI Hi HI~)'.cl_format)
+  end
+
+  def test_tilde_at_left_paren_ignore_non_alpha
+    assert_equal('1 Hi', '~@(1 hi~)'.cl_format)
+  end
+
+  def test_tilde_colon_at_left_paren
+    assert_equal('HI HI HI HI', '~:@(hi hI Hi HI~)'.cl_format)
+  end
+
+  def test_tilde_colon_escaped_close
+    assert_equal('HI ~) HI.', '~:@(hi ~~) hi.~)'.cl_format)
+  end
+
   def test_tilde_p_with_s
     assert_equal('rabbits', 'rabbit~p'.cl_format(2))
   end
