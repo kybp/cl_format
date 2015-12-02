@@ -94,6 +94,22 @@ module CLFormat
           backward_arg(1, args) if m[:modifiers].include?(':')
           format_plural(m[:modifiers].include?('@'), args)
 
+        elsif m = /^~\?/.match(args[:string])
+          args[:string] = m.post_match
+          substr = args[:left].shift
+          args[:used] << substr
+          subargs = args[:left].shift
+          args[:used] << subargs
+          args[:acc] += substr.cl_format(*subargs)
+
+        elsif m = /^~@\?/.match(args[:string])
+          substr = args[:left].shift
+          args[:used] << substr
+          args[:string] = substr + m.post_match
+
+        elsif /^~/.match(args[:string])
+          raise 'unimplemented format directive'
+
         else
           str = args[:string]
           args.merge!(string: str[1..-1], acc: args[:acc] + str[0])
@@ -142,7 +158,7 @@ module CLFormat
                      modifiers, args)
       n = args[:left].shift
       args[:used] << n
-      raise TypeError, '~R got #{n}' unless n.is_a?(Integer)
+      raise TypeError, "~R got #{n}" unless n.is_a?(Integer)
       radix          = radix.to_i
       mincol         = mincol.to_i
       padchar        = padchar.nil? ? ' ' : padchar

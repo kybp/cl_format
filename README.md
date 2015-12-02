@@ -24,6 +24,8 @@ implementation requires the conventional order.
   (Omitted: ~W and the : modifier for ~A and ~S)
 - [22.3.7.1: Go-To]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
+- [22.3.7.6: Recursive Processing]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgf.htm)
 - [22.3.8: Miscellaneous Operations]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_ch.htm)
 - [22.3.9.3: Ignored Newline]
