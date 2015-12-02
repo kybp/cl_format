@@ -25,6 +25,10 @@ class MiscOpsTest < MiniTest::Test
     assert_equal('HI ~) HI.', '~:@(hi ~~) hi.~)'.cl_format)
   end
 
+  def test_unmatched_tilde_right_paren
+    assert_raises(RuntimeError) { '~:(hi~)~)'.cl_format }
+  end
+
   def test_tilde_p_with_s
     assert_equal('rabbits', 'rabbit~p'.cl_format(2))
   end

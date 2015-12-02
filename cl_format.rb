@@ -87,7 +87,7 @@ module CLFormat
           convert_case(m.post_match, m[:modifiers], args)
 
         elsif /^~\)/.match(args[:string])
-          raise ArgumentError, 'unmatched "~)"'
+          raise 'unmatched "~)"'
 
         elsif m = /^~#{modifiers}[Pp]/.match(args[:string])
           args[:string] = m.post_match
