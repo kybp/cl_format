@@ -13,6 +13,10 @@ class BasicOutputTest < MiniTest::Test
     assert_equal('hi', '~c~c'.cl_format('h', 'i'))
   end
 
+  def test_tilde_c_not_char
+    assert_raises(ArgumentError) { '~c'.cl_format('hi') }
+  end
+
   def test_tilde_percent
     assert_equal("hi\n", 'hi~%'.cl_format)
   end

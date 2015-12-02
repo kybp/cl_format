@@ -13,6 +13,9 @@ end
 
 def cardinal_number(n, prefix='')
   return prefix.empty? ? 'zero' : '' if n.zero?
+  if n >= 1_000_000_000_000_000_000_000_000_000_000_000
+    raise ArgumentError, 'number too large to print in English: #{n}'
+  end
 
   prefix + if false
   elsif n >= 1_000_000_000_000_000_000_000_000_000_000
@@ -45,51 +48,47 @@ def cardinal_number(n, prefix='')
 end
 
 def simple_cardinal(n, prefix='')
-  if n.zero?
-    ''
-  else
-    prefix + case n
-             when  1; 'one'
-             when  2; 'two'
-             when  3; 'three'
-             when  4; 'four'
-             when  5; 'five'
-             when  6; 'six'
-             when  7; 'seven'
-             when  8; 'eight'
-             when  9; 'nine'
-             when 10; 'ten'
-             when 11; 'eleven'
-             when 12; 'twelve'
-             when 13; 'thirteen'
-             when 14; 'fourteen'
-             when 15; 'fifteen'
-             when 16; 'sixteen'
-             when 17; 'seventeen'
-             when 18; 'eighteen'
-             when 19; 'nineteen'
-             when 20; 'twenty'
-             when 30; 'thirty'
-             when 40; 'forty'
-             when 50; 'fifty'
-             when 60; 'sixty'
-             when 70; 'seventy'
-             when 80; 'eighty'
-             when 90; 'ninety'
-             else raise ArgumentError
-             end
-  end
+  return '' if n.zero?
+  prefix + case n
+           when  1; 'one'
+           when  2; 'two'
+           when  3; 'three'
+           when  4; 'four'
+           when  5; 'five'
+           when  6; 'six'
+           when  7; 'seven'
+           when  8; 'eight'
+           when  9; 'nine'
+           when 10; 'ten'
+           when 11; 'eleven'
+           when 12; 'twelve'
+           when 13; 'thirteen'
+           when 14; 'fourteen'
+           when 15; 'fifteen'
+           when 16; 'sixteen'
+           when 17; 'seventeen'
+           when 18; 'eighteen'
+           when 19; 'nineteen'
+           when 20; 'twenty'
+           when 30; 'thirty'
+           when 40; 'forty'
+           when 50; 'fifty'
+           when 60; 'sixty'
+           when 70; 'seventy'
+           when 80; 'eighty'
+           when 90; 'ninety'
+           end
 end
 
 def ordinal_number(n)
   case n
-  when 1; 'first'
-  when 2; 'second'
-  when 3; 'third'
-  when 4; 'fourth'
-  when 5; 'fifth'
-  when 8; 'eighth'
-  when 9; 'ninth'
+  when  1; 'first'
+  when  2; 'second'
+  when  3; 'third'
+  when  4; 'fourth'
+  when  5; 'fifth'
+  when  8; 'eighth'
+  when  9; 'ninth'
   when 12; 'twelfth'
   else
     if n > 10 && n < 100 && n % 10 == 0
