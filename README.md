@@ -4,9 +4,6 @@ This is an implementation of the Common Lisp FORMAT function for
 Ruby. It will aim to be as complete as makes sense. FORMAT is
 described fully in the
 [HyperSpec](http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm).
-In Common Lisp, if a : and @ modifier are both supplied, they can come
-in either order, but ':@' is conventional. Currently, this
-implementation requires the conventional order.
 
 ## Currently implemented:
 
