@@ -23,7 +23,7 @@ class MiscOpsTest < MiniTest::Test
   end
 
   def test_tilde_colon_escaped_close
-    assert_equal('HI ~) HI.', '~:@(hi ~~) hi~).'.cl_format)
+    assert_equal('HI ~) HI.', '~:@(hi ~~) hi.~)'.cl_format)
   end
 
   def test_tilde_p_with_s

@@ -325,16 +325,18 @@ module CLFormat
 
   def tilde_left_paren(args)
     if match = /^~(?<modifier>:?@?)\(/.match(args[:string])
-      rest = match.post_match.sub(/(.*?)(~~)*~\)/) do
+      rest = match.post_match.sub(/(.*)([^~]~|~(~{2})+)\)/) do
+        # remove only the last ~ before the )
+        text = "#{$1}#{$2[0..-2]}"
         if match[:modifier].include?(':') &&
            match[:modifier].include?('@')
-          $1.upcase
+          text.upcase
         elsif match[:modifier].include?(':')
-          $1.split.map(&:capitalize).join(' ')
+          text.split.map(&:capitalize).join(' ')
         elsif match[:modifier].include?('@')
-          $1.downcase.sub(/[a-zA-Z]/, &:upcase)
+          text.downcase.sub(/[a-zA-Z]/, &:upcase)
         else
-          $1.downcase
+          text.downcase
         end
       end
       format_loop(args.merge(string: rest))
