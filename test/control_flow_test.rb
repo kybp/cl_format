@@ -36,4 +36,20 @@ class ControlFlowTest < MiniTest::Test
   def test_tilde_at_question_mark
     assert_equal('<Foo 5> 7', '~@? ~d'.cl_format('<~a ~d>', 'Foo', 5, 7))
   end
+
+  def test_tilde_left_brace
+    assert_equal('123', '~{~a~}'.cl_format([1,2,3]))
+  end
+
+  def test_tilde_left_brace_escape
+    assert_equal('1, 2, 3', '~{~a~^, ~}'.cl_format([1,2,3]))
+  end
+
+  def test_unmatched_tilde_left_brace
+    assert_raises(RuntimeError) { '~{~a'.cl_format([2]) }
+  end
+
+  def test_unmatched_tilde_right_brace
+    assert_raises(RuntimeError) { '~a ~}'.cl_format(2) }
+  end
 end

@@ -107,6 +107,13 @@ module CLFormat
           args[:used] << substr
           args[:string] = substr + m.post_match
 
+        elsif m = /^~{/.match(args[:string])
+          args[:string] = m.post_match
+          format_iteration(args)
+
+        elsif /^~}/.match(args[:string])
+          raise 'unmatched "~}"'
+
         elsif /^~/.match(args[:string])
           raise 'unimplemented format directive'
 
@@ -305,6 +312,30 @@ module CLFormat
       singular, plural = y_word ? ['y', 'ies'] : ['', 's']
       args[:acc] += (n.to_i == 1 ? singular : plural)
     end
+
+    def format_iteration(args)
+      if m = /(.*)([^~]~|~(~{2})+)}/.match(args[:string])
+        args[:string] = m.post_match
+        loop_body = "#{$1}#{$2[0..-2]}"
+        loop_args = args[:left].shift
+        args[:used] << loop_args
+        args[:acc] += loop_args.inject(['', 1]) do |(acc, i), arg|
+          acc += if i == loop_args.length
+            loop_body.sub(/(.*?)([^~]~|~(~{2})+)\^.*/) do
+              "#{$1}#{$2[0..-2]}"
+            end.cl_format(arg)
+          else
+            loop_body.sub(/(.*?)([^~]~|~(~{2})+)\^/) do
+              "#{$1}#{$2[0..-2]}"
+            end.cl_format(arg)
+          end
+          [acc, i + 1]
+        end[0]
+      else
+        raise 'unmatched ~{'
+      end
+    end
+    
   end
 
   def cl_format(*args)
