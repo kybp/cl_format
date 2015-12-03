@@ -3,6 +3,8 @@ require_relative 'roman_numeral'
 
 module CLFormat
   class CLFormatter
+    @@unescaped = /((?<!~)|(?<=~{2})+)/
+
     def given?(s)
       !(s.nil? || s.empty?)
     end
@@ -114,8 +116,11 @@ module CLFormat
         elsif /^~}/.match(args[:string])
           raise 'unmatched "~}"'
 
+        elsif /^~\^/.match(args[:string])
+          args[:string] = nil
+
         elsif /^~/.match(args[:string])
-          raise 'unimplemented format directive'
+          raise "unimplemented format directive at start of: #{args[:string]}"
 
         else
           str = args[:string]
@@ -291,11 +296,10 @@ module CLFormat
     end
 
     def convert_case(rest, modifiers, args)
-      args[:string] = rest.sub(/(.*)([^~]~|~(~{2})+)\)/) do
-        # remove only the last ~ before the )
-        text = "#{$1}#{$2[0..-2]}"
+      args[:string] = rest.sub(/(.*)#{@@unescaped}~\)/) do
+        text = $1
         if modifiers.include?(':') && modifiers.include?('@')
-            text.upcase
+          text.upcase
         elsif modifiers.include?(':')
           text.split.map(&:capitalize).join(' ')
         elsif modifiers.include?('@')
@@ -314,20 +318,21 @@ module CLFormat
     end
 
     def format_iteration(args)
-      if m = /(.*)([^~]~|~(~{2})+)}/.match(args[:string])
+      if m = /(.*)#{@@unescaped}~}/.match(args[:string])
         args[:string] = m.post_match
-        loop_body = "#{$1}#{$2[0..-2]}"
+        body = $1
         loop_args = args[:left].shift
         args[:used] << loop_args
         args[:acc] += loop_args.inject(['', 1]) do |(acc, i), arg|
-          acc += if i == loop_args.length
-            loop_body.sub(/(.*?)([^~]~|~(~{2})+)\^.*/) do
-              "#{$1}#{$2[0..-2]}"
-            end.cl_format(arg)
+          # Right now this can't tell whether a ~; refers to us or
+          # not, so you can't use ~; inside any structures inside ~{~}
+          until_escape = /(.*?)#{@@unescaped}~\^/
+          if i == loop_args.length
+            before_escape = body.sub(/#{until_escape}.*/) { $1 }
+            acc += before_escape.cl_format(arg)
           else
-            loop_body.sub(/(.*?)([^~]~|~(~{2})+)\^/) do
-              "#{$1}#{$2[0..-2]}"
-            end.cl_format(arg)
+            without_escape = body.sub(until_escape) { $1 }
+            acc += without_escape.cl_format(arg)
           end
           [acc, i + 1]
         end[0]
@@ -335,7 +340,6 @@ module CLFormat
         raise 'unmatched ~{'
       end
     end
-    
   end
 
   def cl_format(*args)

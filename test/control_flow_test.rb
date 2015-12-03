@@ -52,4 +52,13 @@ class ControlFlowTest < MiniTest::Test
   def test_unmatched_tilde_right_brace
     assert_raises(RuntimeError) { '~a ~}'.cl_format(2) }
   end
+
+  def test_nested_iteration
+    assert_equal('1234', '~{~{~a~}~}'.cl_format([[1,2],[3,4]]))
+  end
+
+  def test_nested_iteration_escapes
+    assert_equal('1 2 | 3 4 | 5 6',
+                 '~{~{~a~^ ~}~^ | ~}'.cl_format([[1,2],[3,4],[5,6]]))
+  end
 end
