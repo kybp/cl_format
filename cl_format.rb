@@ -111,9 +111,11 @@ module CLFormat
 
         elsif m = /^~#{modifiers}{/.match(args[:string])
           args[:string] = m.post_match
-          format_iteration(m[:modifiers].include?('@'), args)
+          use_sublists = m[:modifiers].include?(':')
+          use_all_args = m[:modifiers].include?('@')
+          format_iteration(use_sublists, use_all_args, args)
 
-        elsif /^~}/.match(args[:string])
+        elsif /^~:?}/.match(args[:string])
           raise 'unmatched "~}"'
 
         elsif m = /^~\^/.match(args[:string])
@@ -317,21 +319,28 @@ module CLFormat
       args[:acc] += (n.to_i == 1 ? singular : plural)
     end
 
-    def format_iteration(use_all_args, args)
-      if m = /(.*)#{@@unescaped}~}/.match(args[:string])
+    def format_iteration(use_sublists, use_all_args, args)
+      if m = /(?<body>.*)#{@@unescaped}~(?<once>:?)}/.match(args[:string])
         args[:string] = m.post_match
-        body = $1
+        no_force = m[:once].empty?
         if use_all_args
           loop_args, used = args[:left], args[:used]
         else
-          loop_args = args[:left].shift
+          loop_args, used = args[:left].shift, []
           args[:used] << loop_args
-          used = []
         end
         left = loop_args
-        until left.empty?
-          formatted = format_loop(string: body, used: used, left: left, acc: '')
-          used, left = formatted[:used], formatted[:left]
+        until left.empty? && no_force
+          no_force = true
+          if use_sublists && !left[0].is_a?(Array)
+            raise TypeError, "~:{ expected Array and got: #{left[0]}"
+          else
+            given = use_sublists ? left[0] : left
+          end
+          formatted = format_loop(string: m[:body], used: used,
+                                  left: given, acc: '')
+          used = formatted[:used]
+          left = use_sublists ? left.drop(1) : formatted[:left]
           args[:acc] += formatted[:acc]
         end
         args[:used], args[:left] = used, left if use_all_args

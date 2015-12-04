@@ -73,4 +73,16 @@ class ControlFlowTest < MiniTest::Test
   def test_tilde_at_left_brace_save_args
     assert_equal('1 2 3 4.', '~s ~@{~s~^ ~}.'.cl_format(1,2,3,4))
   end
+
+  def test_tilde_colon_left_brace
+    assert_equal('<1:23:45:6>', '<~:{~a:~a~}>'.cl_format([[1,2],[3,4],[5,6]]))
+  end
+
+  def test_tilde_colon_at_left_brace
+    assert_equal('1:23:4', '~:@{~s:~s~}'.cl_format([1,2],[3,4]))
+  end
+
+  def test_tilde_colon_right_brace
+    assert_equal('1 hi', '~a ~@{hi~:}'.cl_format(1))
+  end
 end

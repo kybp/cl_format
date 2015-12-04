@@ -23,7 +23,7 @@ described fully in the
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
 - [22.3.7.4: Iteration]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgd.htm)
-  (no modifiers yet)
+  (except for specifying maximum iterations)
 - [22.3.7.6: Recursive Processing]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgf.htm)
 - [22.3.8: Miscellaneous Operations]
