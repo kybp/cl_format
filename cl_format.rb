@@ -1,6 +1,3 @@
-# case conversion appears to be broken
-#
-# and so are character arguments, not surprised there
 require_relative 'english_number'
 require_relative 'roman_numeral'
 
