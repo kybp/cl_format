@@ -116,8 +116,8 @@ module CLFormat
         elsif /^~}/.match(args[:string])
           raise 'unmatched "~}"'
 
-        elsif /^~\^/.match(args[:string])
-          args[:string] = nil
+        elsif m = /^~\^/.match(args[:string])
+          args[:string] = args[:left].empty? ? nil : m.post_match
 
         elsif /^~/.match(args[:string])
           raise "unimplemented format directive at start of: #{args[:string]}"
@@ -127,7 +127,7 @@ module CLFormat
           args.merge!(string: str[1..-1], acc: args[:acc] + str[0])
         end
       end
-      args[:acc]
+      args
     end
 
     def format_character(args)
@@ -321,36 +321,25 @@ module CLFormat
       if m = /(.*)#{@@unescaped}~}/.match(args[:string])
         args[:string] = m.post_match
         body = $1
-        before_esc, after_esc = split_on_escape(body)
         loop_args = args[:left].shift
         args[:used] << loop_args
-        args[:acc] += loop_args.inject(['', 1]) do |(acc, i), arg|
-          new  = before_esc
-          new += after_esc unless i == loop_args.length
-          [acc + new.cl_format(arg), i + 1]
-        end[0]
+        used, left = [], loop_args
+        until left.empty?
+          formatted = format_loop(string: body, used: used,
+                                  left: left, acc: '')
+          used, left = formatted[:used], formatted[:left]
+          args[:acc] += formatted[:acc]
+        end
       else
         raise 'unmatched ~{'
       end
     end
-
-    def split_on_escape(string)
-      match = /^(.*?)#{@@unescaped}~\^/.match(string)
-      return [string, ''] unless match
-      before = match[1]
-      if before =~ /#{@@unescaped}~{/
-        m = /.*?(?<loop>#{@@unescaped}~{.*?\g<loop>*#{@@unescaped}~})/
-            .match(string)
-        raise 'unmatched ~{' if m.nil?
-        before = m[0] + split_on_escape(m.post_match)[0]
-      end
-      after = string[before.length + 2..-1]
-      [before, after]
-    end
   end
 
   def cl_format(*args)
-    CLFormatter.new.format_loop(string: self, acc: '', used: [], left: args)
+    c = CLFormatter.new
+    result = c.format_loop(string: self, acc: '', used: [], left: args)
+    result[:acc]
   end
 end
 

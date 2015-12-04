@@ -61,4 +61,8 @@ class ControlFlowTest < MiniTest::Test
     assert_equal('1-2 | 3-4 | 5-6',
                  '~{~{~a~^-~}~^ | ~}'.cl_format([[1,2],[3,4],[5,6]]))
   end
+
+  def test_multiple_arguments_per_loop
+    assert_equal('1:2 3:4 5:6', '~{~a:~a~^ ~}'.cl_format([1,2,3,4,5,6]))
+  end
 end
