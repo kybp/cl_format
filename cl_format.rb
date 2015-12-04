@@ -1,3 +1,6 @@
+# case conversion appears to be broken
+#
+# and so are character arguments, not surprised there
 require_relative 'english_number'
 require_relative 'roman_numeral'
 
@@ -9,121 +12,198 @@ module CLFormat
       !(s.nil? || s.empty?)
     end
 
-    def format_loop(args)
-      modifiers = /(?<modifiers>(@:|:@|:|@)?)/
-      while given?(args[:string])
-        if m = /^~#{modifiers}[Cc]/.match(args[:string])
-          # TODO: add modifier support
-          args[:string] = m.post_match
-          format_character(args)
+    def read_format_directive(string)
+      return nil if string.empty? or string[0] != '~'
+      raise 'unexpected end of format string' unless string.length > 1
+      full   = string
+      string = string[1..-1]
+      args   = []
+      loop do
+        if string[0] == ','
+          args << nil
+          string = string[1..-1]
+        elsif m = /\A([+-]?\d+),?/.match(string)
+          args << m[1]
+          string = m.post_match
+        elsif m = /\A'(.),?/.match(string)
+          args << m[1]
+          string = m.post_match
+        elsif m = /\A(?<flags>(@:|:@|:|@)?)(?<directive>.)/m.match(string)
+          return { args: args, flags: m[:flags], directive: m[:directive],
+                   remaining: m.post_match }
+        else
+          raise "invalid format directive at start of: #{full}"
+        end
+      end
+    end
 
-        elsif m = /^~(?<n>\d*)(?<directive>[|%~])/.match(args[:string])
-          args[:string] = m.post_match
-          repeat_char(m[:directive], m[:n], args)
+    def flag_error(directive, expected, given)
+      case expected
+      when :no_flags
+        raise "#{directive} does not take flags, given: #{given}"
+      when :not_both
+        raise "#{directive} does not take : and @ at the same time"
+      else
+        raise "#{directive} does not take a #{given} flag"
+      end
+    end
 
-        elsif m = /^~(?<n>\d*)&/.match(args[:string])
-          args[:string] = m.post_match
-          fresh_line(m[:n], args)
+    def arg_error(directive, expected, given)
+      raise "#{directive} expected #{expected}, given: #{given}"
+    end
 
-        elsif m = /^~(?<old>:?)@r/.match(args[:string])
-          args[:string] = m.post_match
-          format_roman(m[:old].empty?, args)
-
-        elsif m = /^~(?<cardinal>:?)r/.match(args[:string])
-          args[:string] = m.post_match
-          format_english(m[:cardinal].empty?, args)
-
-        elsif m = /^~(?<r>\d*)(,(?<m>\d*)(,('(?<p>.))?(,('(?<cc>.))?(,(?<ci>\d*))?)?)?)?#{modifiers}[Rr]/.match(args[:string])
-          # If no radix is specified, the other arguments are meaningless
-          if m[:r].empty?
-            args[:string] = "~#{m[:modifiers]}r#{m.post_match}"
-          else
-            args[:string] = m.post_match
-            format_radix(m[:r], m[:m], m[:p], m[:cc], m[:ci],
-                         m[:modifiers], args)
+    def normalize_args(directive, input, spec)
+      if input.length > spec.length
+        raise "#{directive} takes at most #{spec.length} arguments, " +
+              "given #{input.length}"
+      end
+      spec.map do |type, default|
+        x = input.shift
+        if x.nil?
+          default
+        else
+          case type
+          when :int
+            n = x.to_i
+            arg_error(directive, :int, x) if n.nil?
+            n
+          when :char
+            if x.is_a?(String) and x.length == 1
+              x
+            else
+              arg_error(directive, :char, x)
+            end
           end
+        end
+      end
+    end
 
-        elsif m = /^~(?<args>\d*(,('.)?(,('.)?(,\d*)?)?)?#{modifiers})(?<directive>[dbox])/i.match(args[:string])
-          radix = { 'd' => 10, 'b' => 2, 'o' => 8, 'x' => 16}[m[:directive]]
-          args[:string] = "~#{radix},#{m[:args]}r#{m.post_match}"
+    def format_loop(args)
+      while given?(args[:string])
+        if d = read_format_directive(args[:string])
+          args[:string] = d[:remaining]
 
-        elsif m = /^~(?<w>\d*)(,(?<d>\d*)(,(?<k>\d*)(,('(?<overflowchar>.))?(,('(?<padchar>.))?)?)?)?)?(?<modifier>@?)f/.match(args[:string])
-          args[:string] = m.post_match
-          format_fixed(m[:w], m[:d], m[:k], m[:overflowchar],
-                       m[:padchar], m[:modifier] == '@', args)
+          case d[:directive].downcase
+          when 'c'
+            if d[:args].empty?
+              format_character(args)
+            else
+              raise "~C does not take arguments, given: #{d[:args]}"
+            end
 
-        elsif m = /^~(?<d>\d*)(,(?<n>\d*)(,(?<w>\d*)(,('(?<padchar>.))?)?)?)?#{modifiers}\$/.match(args[:string])
-          args[:string] = m.post_match
-          format_monetary(m[:d], m[:n], m[:w], m[:padchar],
-                          m[:modifiers], args)
+          when /[|%~]/
+            if !d[:flags].empty?
+              flag_error(d[:directive], :no_flags, d[:flags])
+            else
+              norm = normalize_args(d[:directive], d[:args], [[:int, 1]])
+              repeat_char(d[:directive], norm[0], args)
+            end
 
-        elsif m = /^~(?<mc>\d*)(,(?<ci>\d*)(,(?<mp>\d*)(,('(?<pc>.))?)?)?)?(?<on_left>@?)(?<directive>[as])/i.match(args[:string])
-          args[:string] = m.post_match
-          format_object(m[:mc], m[:ci], m[:mp], m[:pc],
-                        m[:on_left].empty? ? :right : :left, m[:directive],
-                        args)
+          when '&'
+            if !d[:flags].empty?
+              flag_error(d[:directive], :no_flags, d[:flags])
+            else
+              norm = normalize_args(d[:directive], d[:args], [[:int, 1]])
+              fresh_line(norm[0], args)
+            end
 
-        elsif m = /^~(?<n>\d*)\*/.match(args[:string])
-          args[:string] = m.post_match
-          forward_arg(m[:n].empty? ? 1 : m[:n].to_i, args)
-
-        elsif m = /^~(?<n>\d*):\*/.match(args[:string])
-          args[:string] = m.post_match
-          backward_arg(m[:n].empty? ? 1 : m[:n].to_i, args)
-
-        elsif m = /^~(?<i>\d*)@\*/.match(args[:string])
-          args[:string] = m.post_match
-          goto_arg(m[:i].to_i, args)
-
-        elsif m = /\A~\n\s*/m.match(args[:string])
-          args[:string] = m.post_match
-
-        elsif m = /\A~:\n/m.match(args[:string])
-          args[:string] = m.post_match
-
-        elsif m = /\A~@\n\s*/m.match(args[:string])
-          args[:string] = m.post_match
-          args[:acc] += "\n"
-
-        elsif m = /^~#{modifiers}\(/.match(args[:string])
-          convert_case(m.post_match, m[:modifiers], args)
-
-        elsif /^~\)/.match(args[:string])
-          raise 'unmatched "~)"'
-
-        elsif m = /^~#{modifiers}[Pp]/.match(args[:string])
-          args[:string] = m.post_match
-          backward_arg(1, args) if m[:modifiers].include?(':')
-          format_plural(m[:modifiers].include?('@'), args)
-
-        elsif m = /^~\?/.match(args[:string])
-          args[:string] = m.post_match
-          substr = args[:left].shift
-          args[:used] << substr
-          subargs = args[:left].shift
-          args[:used] << subargs
-          args[:acc] += substr.cl_format(*subargs)
-
-        elsif m = /^~@\?/.match(args[:string])
-          substr = args[:left].shift
-          args[:used] << substr
-          args[:string] = substr + m.post_match
-
-        elsif m = /^~#{modifiers}{/.match(args[:string])
-          args[:string] = m.post_match
-          use_sublists = m[:modifiers].include?(':')
-          use_all_args = m[:modifiers].include?('@')
-          format_iteration(use_sublists, use_all_args, args)
-
-        elsif /^~:?}/.match(args[:string])
-          raise 'unmatched "~}"'
-
-        elsif m = /^~\^/.match(args[:string])
-          args[:string] = args[:left].empty? ? nil : m.post_match
-
-        elsif /^~/.match(args[:string])
-          raise "unimplemented format directive at start of: #{args[:string]}"
-
+          when 'r'
+            norm = normalize_args('r', d[:args],
+                                  [[:int,  nil], [:int, 0], [:char, ' '],
+                                   [:char, ','], [:int, 3]])
+            if norm[0].nil?
+              if d[:flags].include?('@')
+                format_roman(d[:flags].include?(':'), args)
+              else
+                format_english(d[:flags].include?(':'), args)
+              end
+            else
+              format_radix(*norm, d[:flags], args)
+            end
+          when /[dbox]/
+            norm = normalize_args(d[:directive], d[:args],
+                                  [[:int, 0], [:char, ' '], [:char, ','],
+                                   [:int, 3]])
+            radix = { 'd' => 10, 'b' => 2, 'o' => 8, 'x' => 16}[d[:directive]]
+            format_radix(radix, *norm, d[:flags], args)
+          when 'f'
+            norm = normalize_args(d[:directive], d[:args],
+                                  [[:int,  nil], [:int,  nil], [:int, 0],
+                                   [:char, nil], [:char, ' ']])
+            flag_error(d[:directive], '@', d[:flags]) if d[:flags].include?(':')
+            format_fixed(*norm, d[:flags].include?('@'), args)
+          when '$'
+            norm = normalize_args(d[:directive], d[:args],
+                                  [[:int, 2], [:int, 1], [:int, 0],
+                                   [:char, ' ']])
+            format_monetary(*norm, d[:flags], args)
+          when /[as]/
+            norm = normalize_args(d[:directive], d[:args],
+                                  [[:int, 0], [:int, 1], [:int, 0],
+                                   [:char, ' ']])
+            flag_error(d[:directive], '@', d[:flags]) if d[:flags].include?(':')
+            side = d[:flags].include?('@') ? :left : :right
+            format_object(*norm, side, d[:directive], args)
+          when '*'
+            if d[:flags].include?('@') && d[:flags].include?(':')
+              flag_error(d[:directive], :not_both, d[:flags])
+            elsif d[:flags].include?('@')
+              norm = normalize_args(d[:directive], d[:args], [[:int, 0]])
+              goto_arg(norm[0], args)
+            else
+              norm = normalize_args(d[:directive], d[:args], [[:int, 1]])
+              if d[:flags].include?(':')
+                backward_arg(norm[0], args)
+              else
+                forward_arg(norm[0], args)
+              end
+            end
+          when "\n"
+            normalize_args('~\n', d[:args], [])
+            if d[:flags].include?(':') && d[:flags].include?('@')
+              flag_error('newline', :not_both, d[:flags])
+            elsif d[:flags].include?(':')
+            # keep space after newline, ie, do nothing
+            elsif d[:flags].include?('@')
+              args[:string].sub!(/\A\s*/, '')
+              args[:acc] += "\n"
+            else
+              args[:string].sub!(/\A\s*/, '')
+            end
+          when '('
+            normalize_args('~(', d[:args], [])
+            convert_case(args[:string], d[:flags], args)
+          when ')'
+            raise 'unmatched "~)"'
+          when 'p'
+            normalize_args('~P', d[:args], [])
+            backward_arg(1, args) if d[:flags].include?(':')
+            format_plural(d[:flags].include?('@'), args)
+          when '?'
+            if d[:flags].include?(':')
+              flag_error('~?', '@', ':')
+            elsif d[:flags].empty?
+              substr = args[:left].shift
+              args[:used] << substr
+              subargs = args[:left].shift
+              args[:used] << subargs
+              args[:acc] += substr.cl_format(*subargs)
+            else
+              substr = args[:left].shift
+              args[:used] << substr
+              args[:string] = substr + args[:string]
+            end
+          when '{'
+            use_sublists = d[:flags].include?(':')
+            use_all_args = d[:flags].include?('@')
+            format_iteration(use_sublists, use_all_args, args)
+          when '}'
+            raise 'unmatched "~}"'
+          when '^'
+            args[:string] = nil if args[:left].empty?
+          else
+            raise "unimplemented format directive at start of: #{args[:string]}"
+          end
         else
           str = args[:string]
           args.merge!(string: str[1..-1], acc: args[:acc] + str[0])
@@ -145,41 +225,36 @@ module CLFormat
 
     def repeat_char(char, times, args)
       c = { '|' => "\f", '%' => "\n", '~' => '~' }[char]
-      args[:acc] += c * (times.empty? ? 1 : times.to_i)
+      args[:acc] += c * times
     end
 
     def fresh_line(times, args)
-      return args if times =~ /^0+$/
+      return if times.zero?
       args[:acc] += "\n" if args[:acc][-1] != "\n"
-      args[:acc] += "\n" * (times.empty? ? 0 : times.to_i - 1)
+      args[:acc] += "\n" * (times - 1)
     end
 
-    def format_roman(new, args)
+    def format_roman(old, args)
       n = args[:left].shift
       args[:used] << n
       raise TypeError, 'Roman numeral not integer' unless n.is_a?(Integer)
-      args[:acc] += roman_numeral(n, new ? :new : :old)
+      args[:acc] += roman_numeral(n, old ? :old : :new)
     end
 
-    def format_english(cardinal, args)
+    def format_english(ordinal, args)
       n = args[:left].shift
       args[:used] << n
       raise TypeError, 'English number not integer' unless n.is_a?(Integer)
-      args[:acc] += english_number(n, cardinal ? :cardinal : :ordinal)
+      args[:acc] += english_number(n, ordinal ? :ordinal : :cardinal)
     end
 
     def format_radix(radix, mincol, padchar, commachar, comma_interval,
-                     modifiers, args)
+                     flags, args)
       n = args[:left].shift
       args[:used] << n
-      raise TypeError, "~R got #{n}" unless n.is_a?(Integer)
-      radix          = radix.to_i
-      mincol         = mincol.to_i
-      padchar        = padchar.nil? ? ' ' : padchar
-      commachar      = given?(commachar) ? commachar : ','
-      comma_interval = given?(comma_interval) ? comma_interval.to_i : 3
-      use_commas     = modifiers.include?(':')
-      force_sign     = modifiers.include?('@')
+      raise TypeError, "~R got #{n.inspect}" unless n.is_a?(Integer)
+      use_commas  = flags.include?(':')
+      force_sign  = flags.include?('@')
       args[:acc] += format_int(n, radix, mincol, padchar, commachar,
                                comma_interval, use_commas, force_sign)
     end
@@ -202,10 +277,6 @@ module CLFormat
     def format_fixed(w, d, k, overflowchar, padchar, force_sign, args)
       arg = args[:left].shift
       args[:used] << arg
-      w = given?(w) ? w.to_i : nil
-      d = given?(d) ? d.to_i : nil
-      overflowchar ||= overflowchar
-      padchar      ||= ' '
       args[:acc] += format_flonum(arg.to_f, 0, w, d, k.to_i, overflowchar,
                                   padchar, force_sign)
     end
@@ -245,15 +316,11 @@ module CLFormat
       end
     end
 
-    def format_monetary(d, n, w, padchar, modifiers, args)
+    def format_monetary(d, n, w, padchar, flags, args)
       arg = args[:left].shift
       args[:used] << arg
-      d = given?(d) ? d.to_i : 2
-      n = given?(n) ? n.to_i : 1
-      w = w.to_i
-      padchar ||= ' '
-      force_sign = modifiers.include?('@')
-      if modifiers.include?(':')
+      force_sign = flags.include?('@')
+      if flags.include?(':')
         f = arg.to_f
         sign = f < 0 ? '-' : force_sign ? '+' : ''
         formatted = format_flonum(f, n, [0, w - 1].max, d, 0, nil,
@@ -273,10 +340,7 @@ module CLFormat
                 when 'a'; arg.to_s
                 when 's'; arg.inspect
                 end
-      mincol = mincol.to_i
-      colinc = colinc ? colinc.to_i : 1
-      padchar ||= ' '
-      pad = padchar * minpad.to_i
+      pad = padchar * minpad
       pad += padchar * colinc while obj_str.length + pad.length < mincol
       args[:acc] += case side
                     when :left;  pad + obj_str
@@ -297,14 +361,14 @@ module CLFormat
       args[:used], args[:left] = all_args[0...i], all_args[i..-1]
     end
 
-    def convert_case(rest, modifiers, args)
+    def convert_case(rest, flags, args)
       args[:string] = rest.sub(/(.*)#{@@unescaped}~\)/) do
         text = $1
-        if modifiers.include?(':') && modifiers.include?('@')
+        if flags.include?(':') && flags.include?('@')
           text.upcase
-        elsif modifiers.include?(':')
+        elsif flags.include?(':')
           text.split.map(&:capitalize).join(' ')
-        elsif modifiers.include?('@')
+        elsif flags.include?('@')
           text.downcase.sub(/[a-zA-Z]/, &:upcase)
         else
           text.downcase
