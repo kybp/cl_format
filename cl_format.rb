@@ -22,7 +22,7 @@ module CLFormat
         elsif m = /\A([+-]?\d+),?/.match(string)
           args << m[1]
           string = m.post_match
-        elsif m = /\A'(.),?/.match(string)
+        elsif m = /\A('.),?/.match(string)
           args << m[1]
           string = m.post_match
         elsif m = /\A(?<flags>(@:|:@|:|@)?)(?<directive>.)/m.match(string)
@@ -61,12 +61,11 @@ module CLFormat
         else
           case type
           when :int
-            n = x.to_i
-            arg_error(directive, :int, x) if n.nil?
-            n
+            arg_error(directive, :int, x) unless x =~ /^[+-]?\d+/
+            x.to_i
           when :char
-            if x.is_a?(String) and x.length == 1
-              x
+            if x.is_a?(String) and x =~ /^'(.)$/
+              $1
             else
               arg_error(directive, :char, x)
             end

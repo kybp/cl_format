@@ -25,6 +25,10 @@ class ControlFlowTest < MiniTest::Test
     assert_equal('145', '~d~3@*~d~d'.cl_format(1, 2, 3, 4, 5))
   end
 
+  def test_tilde_colon_at_asterisk
+    assert_raises(RuntimeError) { '~:@*'.cl_format }
+  end
+
   def test_tilde_question_mark
     assert_equal('<Foo 5> 7', '~? ~d'.cl_format('<~a ~d>', ['Foo', 5], 7))
   end

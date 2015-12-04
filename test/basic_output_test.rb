@@ -4,6 +4,10 @@ class BasicOutputTest < MiniTest::Test
   def test_nothing
     assert_equal('', ''.cl_format)
   end
+  
+  def test_non_existent_directive
+    assert_raises(RuntimeError) { '~h'.cl_format(0) }
+  end
 
   def test_simple
     assert_equal('hi', 'hi'.cl_format)
@@ -15,6 +19,10 @@ class BasicOutputTest < MiniTest::Test
 
   def test_tilde_c_not_char
     assert_raises(TypeError) { '~c'.cl_format('hi') }
+  end
+
+  def test_tilde_c_no_args
+    assert_raises(RuntimeError) { '~1,c'.cl_format('x') }
   end
 
   def test_tilde_percent
@@ -37,11 +45,19 @@ class BasicOutputTest < MiniTest::Test
     assert_equal("hi\n", 'hi~&'.cl_format)
   end
 
+  def test_tilde_ampersand_flags
+    assert_raises(RuntimeError) { '~:&'.cl_format }
+  end
+
   def test_tilde_vertical_bar
     assert_equal("h\fhi", 'h~|hi'.cl_format)
   end
 
   def test_tilde_tilde
     assert_equal('~hi~~', '~~hi~~~~'.cl_format)
+  end
+  
+  def test_tilde_tilde_flags
+    assert_raises(RuntimeError) { '~:~'.cl_format }
   end
 end

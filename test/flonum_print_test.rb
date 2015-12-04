@@ -33,6 +33,10 @@ class FlonumPrintTest < MiniTest::Test
     assert_equal("xxx\n", "~3,4,,'xf~%".cl_format(1))
   end
 
+  def test_tilde_f_no_colon
+    assert_raises(RuntimeError) { '~:f'.cl_format(2.3) }
+  end
+
   def test_tilde_dollarsign
     assert_equal('3.00', '~$'.cl_format(3))
   end

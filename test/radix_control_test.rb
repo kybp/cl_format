@@ -1,13 +1,13 @@
 require 'test_helper'
 
 class RadixControlTest < MiniTest::Test
-  # def test_tilde_at_r
-  #   assert_equal('MCDLIII', '~@r'.cl_format(1453))
-  # end
+  def test_tilde_at_r
+    assert_equal('MCDLIII', '~@r'.cl_format(1453))
+  end
 
-  # def test_tilde_colon_at_r
-  #   assert_equal('MCCCCLIII', '~:@r'.cl_format(1453))
-  # end
+  def test_tilde_colon_at_r
+    assert_equal('MCCCCLIII', '~:@r'.cl_format(1453))
+  end
 
   def test_tilde_colon_r
     assert_equal('five hundred twenty-sixth', '~:r'.cl_format(526))
@@ -56,6 +56,10 @@ class RadixControlTest < MiniTest::Test
   def test_tilde_d
     assert_equal("~10,12,'x,'o,1:@r".cl_format(12345),
                     "~12,'x,'o,1:@d".cl_format(12345))
+  end
+
+  def test_tilde_d_unquoted_padchar
+    assert_raises(RuntimeError) { '~2,1d'.cl_format(1) }
   end
 
   def test_tilde_b
