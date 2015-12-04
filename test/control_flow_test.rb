@@ -58,7 +58,7 @@ class ControlFlowTest < MiniTest::Test
   end
 
   def test_nested_iteration_escapes
-    assert_equal('1 2 | 3 4 | 5 6',
-                 '~{~{~a~^ ~}~^ | ~}'.cl_format([[1,2],[3,4],[5,6]]))
+    assert_equal('1-2 | 3-4 | 5-6',
+                 '~{~{~a~^-~}~^ | ~}'.cl_format([[1,2],[3,4],[5,6]]))
   end
 end

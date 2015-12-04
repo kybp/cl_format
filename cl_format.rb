@@ -321,24 +321,31 @@ module CLFormat
       if m = /(.*)#{@@unescaped}~}/.match(args[:string])
         args[:string] = m.post_match
         body = $1
+        before_esc, after_esc = split_on_escape(body)
         loop_args = args[:left].shift
         args[:used] << loop_args
         args[:acc] += loop_args.inject(['', 1]) do |(acc, i), arg|
-          # Right now this can't tell whether a ~; refers to us or
-          # not, so you can't use ~; inside any structures inside ~{~}
-          until_escape = /(.*?)#{@@unescaped}~\^/
-          if i == loop_args.length
-            before_escape = body.sub(/#{until_escape}.*/) { $1 }
-            acc += before_escape.cl_format(arg)
-          else
-            without_escape = body.sub(until_escape) { $1 }
-            acc += without_escape.cl_format(arg)
-          end
-          [acc, i + 1]
+          new  = before_esc
+          new += after_esc unless i == loop_args.length
+          [acc + new.cl_format(arg), i + 1]
         end[0]
       else
         raise 'unmatched ~{'
       end
+    end
+
+    def split_on_escape(string)
+      match = /^(.*?)#{@@unescaped}~\^/.match(string)
+      return [string, ''] unless match
+      before = match[1]
+      if before =~ /#{@@unescaped}~{/
+        m = /.*?(?<loop>#{@@unescaped}~{.*?\g<loop>*#{@@unescaped}~})/
+            .match(string)
+        raise 'unmatched ~{' if m.nil?
+        before = m[0] + split_on_escape(m.post_match)[0]
+      end
+      after = string[before.length + 2..-1]
+      [before, after]
     end
   end
 
