@@ -109,9 +109,9 @@ module CLFormat
           args[:used] << substr
           args[:string] = substr + m.post_match
 
-        elsif m = /^~{/.match(args[:string])
+        elsif m = /^~#{modifiers}{/.match(args[:string])
           args[:string] = m.post_match
-          format_iteration(args)
+          format_iteration(m[:modifiers].include?('@'), args)
 
         elsif /^~}/.match(args[:string])
           raise 'unmatched "~}"'
@@ -317,19 +317,24 @@ module CLFormat
       args[:acc] += (n.to_i == 1 ? singular : plural)
     end
 
-    def format_iteration(args)
+    def format_iteration(use_all_args, args)
       if m = /(.*)#{@@unescaped}~}/.match(args[:string])
         args[:string] = m.post_match
         body = $1
-        loop_args = args[:left].shift
-        args[:used] << loop_args
-        used, left = [], loop_args
+        if use_all_args
+          loop_args, used = args[:left], args[:used]
+        else
+          loop_args = args[:left].shift
+          args[:used] << loop_args
+          used = []
+        end
+        left = loop_args
         until left.empty?
-          formatted = format_loop(string: body, used: used,
-                                  left: left, acc: '')
+          formatted = format_loop(string: body, used: used, left: left, acc: '')
           used, left = formatted[:used], formatted[:left]
           args[:acc] += formatted[:acc]
         end
+        args[:used], args[:left] = used, left if use_all_args
       else
         raise 'unmatched ~{'
       end
