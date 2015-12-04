@@ -21,6 +21,9 @@ described fully in the
   (Omitted: ~W and the : modifier for ~A and ~S)
 - [22.3.7.1: Go-To]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
+- [22.3.7.4: Iteration]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgd.htm)
+  (no modifiers yet)
 - [22.3.7.6: Recursive Processing]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgf.htm)
 - [22.3.8: Miscellaneous Operations]
