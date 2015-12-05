@@ -13,7 +13,7 @@ module CLFormat
       return nil if string.empty? or string[0] != '~'
       raise 'unexpected end of format string' unless string.length > 1
       full   = string
-      string = string[1..-1]
+      string = full[1..-1]
       args   = []
       loop do
         if string[0] == ','
@@ -29,7 +29,7 @@ module CLFormat
           return { args: args, flags: m[:flags], directive: m[:directive],
                    remaining: m.post_match }
         else
-          raise "invalid format directive at start of: #{full}"
+          raise "invalid format directive"
         end
       end
     end
@@ -197,8 +197,12 @@ module CLFormat
             raise 'unmatched "~}"'
           when '^'
             args[:string] = nil if args[:left].empty?
+          when '['
+            format_conditional(args)
+          when ']'
+            raise 'unmatched "~]"'
           else
-            raise "unimplemented format directive at start of: #{args[:string]}"
+            raise "unimplemented format directive: ~#{d[:directive]}"
           end
         else
           str = args[:string]
@@ -233,14 +237,14 @@ module CLFormat
     def format_roman(old, args)
       n = args[:left].shift
       args[:used] << n
-      raise TypeError, 'Roman numeral not integer' unless n.is_a?(Integer)
+      raise TypeError, 'Roman numeral not integer' unless n.is_a?(Fixnum)
       args[:acc] += roman_numeral(n, old ? :old : :new)
     end
 
     def format_english(ordinal, args)
       n = args[:left].shift
       args[:used] << n
-      raise TypeError, 'English number not integer' unless n.is_a?(Integer)
+      raise TypeError, 'English number not integer' unless n.is_a?(Fixnum)
       args[:acc] += english_number(n, ordinal ? :ordinal : :cardinal)
     end
 
@@ -248,7 +252,7 @@ module CLFormat
                      flags, args)
       n = args[:left].shift
       args[:used] << n
-      raise TypeError, "~R got #{n.inspect}" unless n.is_a?(Integer)
+      raise TypeError, "~R got #{n.inspect}" unless n.is_a?(Fixnum)
       use_commas  = flags.include?(':')
       force_sign  = flags.include?('@')
       args[:acc] += format_int(n, radix, mincol, padchar, commachar,
@@ -408,6 +412,43 @@ module CLFormat
         raise 'unmatched ~{'
       end
     end
+
+    def format_conditional(args)
+      c = split_clauses(args[:string])
+      clauses, after = c[:clauses], c[:after]
+      arg = args[:left].shift
+      args[:used] << arg
+      raise TypeError, 'non-numeric index' unless arg.is_a?(Fixnum)
+      clause = clauses[arg]
+      args[:string] = "#{clause}#{c[:after]}"
+      p "became #{clause}"
+    end
+
+    def split_clauses(string)
+      p "called with: #{string}"
+      open    = /#{@@unescaped}~\[/
+      close   = /#{@@unescaped}~\]/
+      sep     = /#{@@unescaped}~;/
+      clause  = /(?<clause>(.|(?<cond>#{open}.*?\g<cond>*#{close}))*?)/
+      finish  = /(?<finish>#{sep}|#{close})/
+      clauses = []
+      loop do
+        if m = /#{clause}#{finish}/.match(string)
+          p "adding: #{m[:clause]}"
+          clauses << m[:clause]
+          if m[:finish] =~ close
+            p clauses
+            return { clauses: clauses, after: m.post_match }
+          else
+            string = m.post_match
+          end
+        else
+          p string
+          raise 'unmatched ~['
+        end
+      end
+    end
+
   end
 
   def cl_format(*args)

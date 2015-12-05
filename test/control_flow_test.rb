@@ -89,4 +89,20 @@ class ControlFlowTest < MiniTest::Test
   def test_tilde_colon_right_brace
     assert_equal('1 hi', '~a ~@{hi~:}'.cl_format(1))
   end
+
+  def test_tilde_left_bracket_zero_index
+    assert_equal('zero', '~[zero~;one~;two~]'.cl_format(0))
+  end
+
+  def test_tilde_left_bracket_one_index
+    assert_equal('one', '~[zero~;one~;two~]'.cl_format(1))
+  end
+
+  def test_tilde_left_bracket_out_of_bounds
+    assert_equal('', '~[zero~;one~;two~]'.cl_format(3))
+  end
+
+  def test_tilde_left_bracket_nested
+    assert_equal('b1', '~[~[a1~;a2]~;~[b1~;b2~]~]'.cl_format(1, 0))
+  end
 end
