@@ -419,23 +419,29 @@ module CLFormat
       arg = args[:left].shift
       args[:used] << arg
       raise TypeError, 'non-numeric index' unless arg.is_a?(Fixnum)
-      clause = clauses[arg]
+      clause = clauses[arg] || c[:default]
       args[:string] = "#{clause}#{c[:after]}"
     end
 
     def split_clauses(string)
       open    = /#{@@unescaped}~\[/
       close   = /#{@@unescaped}~\]/
-      sep     = /#{@@unescaped}~;/
+      sep     = /#{@@unescaped}~:?;/
       clause  = /(?<clause>.*?(?<cond>#{open}.*?\g<cond>*#{close})*.*?)/
       finish  = /(?<finish>#{sep}|#{close})/
-      clauses = []
+      clauses, default = [], nil
+      get_default = false
       loop do
         if m = /#{clause}#{finish}/.match(string)
           clauses << m[:clause]
+          if get_default
+            default = m[:clause]
+            get_default = false
+          end
           if m[:finish] =~ close
-            return { clauses: clauses, after: m.post_match }
+            return { clauses: clauses, after: m.post_match, default: default }
           else
+            get_default = m[:finish].include?(':')
             string = m.post_match
           end
         else

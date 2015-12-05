@@ -110,4 +110,8 @@ class ControlFlowTest < MiniTest::Test
     s = '~[~[~[1~;2~]~;~[3~;4~]~]~;~[~[5~;6~]~;~[7~;8~]~]~]'
     assert_equal('6', s.cl_format(1,0,1))
   end
+
+  def test_tilde_left_bracket_default
+    assert_equal('etc', '~[zero~;one~;two~:;etc~]'.cl_format(5))
+  end
 end
