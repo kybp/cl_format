@@ -198,7 +198,15 @@ module CLFormat
           when '^'
             args[:string] = nil if args[:left].empty?
           when '['
-            format_conditional(args)
+            if d[:flags].include?(':') and d[:flags].include?('@')
+              flag_error('newline', :not_both, d[:flags])
+            elsif d[:flags].include?(':')
+              format_conditional(args)
+            elsif d[:flags].include?('@')
+              args[:string] = "~:[~;~:*#{args[:string]}"
+            else
+              format_indexed(args)
+            end
           when ']'
             raise 'unmatched "~]"'
           else
@@ -348,6 +356,12 @@ module CLFormat
                     end
     end
 
+    def next_arg(args)
+      arg = args[:left].shift
+      args[:used] << arg
+      arg
+    end
+
     def forward_arg(n, args)
       n.times { args[:used] << args[:left].shift }
     end
@@ -416,8 +430,14 @@ module CLFormat
     def format_conditional(args)
       c = split_clauses(args[:string])
       clauses, after = c[:clauses], c[:after]
-      arg = args[:left].shift
-      args[:used] << arg
+      arg = next_arg(args)
+      args[:string] = "#{c[:clauses][arg ? 1 : 0]}#{c[:after]}"
+    end
+
+    def format_indexed(args)
+      c = split_clauses(args[:string])
+      clauses = c[:clauses]
+      arg = next_arg(args)
       raise TypeError, 'non-numeric index' unless arg.is_a?(Fixnum)
       clause = clauses[arg] || c[:default]
       args[:string] = "#{clause}#{c[:after]}"

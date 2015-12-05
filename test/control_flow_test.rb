@@ -114,4 +114,24 @@ class ControlFlowTest < MiniTest::Test
   def test_tilde_left_bracket_default
     assert_equal('etc', '~[zero~;one~;two~:;etc~]'.cl_format(5))
   end
+
+  def test_tilde_colon_left_bracket_true
+    assert_equal('1 yes 1', "~a ~:[no~;yes~] ~a".cl_format(1, true, 1))
+  end
+
+  def test_tilde_colon_left_bracket_false
+    assert_equal('1 no 1', "~a ~:[no~;yes~] ~a".cl_format(1, false, 1))
+  end
+
+  def test_tilde_at_left_bracket_true
+    assert_equal('yes (true)', '~:[no~;yes~]~:*~@[ (~a)~]'.cl_format(true))
+  end
+
+  def test_tilde_at_left_bracket_false
+    assert_equal('no', '~:[no~;yes~]~:*~@[ (~a)~]'.cl_format(false))
+  end
+
+  def test_tilde_at_colon_left_bracket
+    assert_raises(RuntimeError) { '~:@[zero~;one~;two~]'.cl_format(0) }
+  end
 end
