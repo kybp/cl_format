@@ -24,8 +24,8 @@ Note: V and # prefix parameters are not yet supported.
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cg.htm)
 - [22.3.8: Miscellaneous Operations]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_ch.htm)
-- [22.3.9.3: Ignored Newline]
-  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cic.htm)
+- [22.3.9: Miscellaneous Pseudo-Operations]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_ci.htm)
 
 ## Usage
 
