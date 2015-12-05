@@ -5,8 +5,10 @@ module CLFormat
   class CLFormatter
     @@unescaped = /((?<!~)|(?<=~{2})+)/
 
-    def given?(s)
-      !(s.nil? || s.empty?)
+    def next_arg(args)
+      arg = args[:left].shift
+      args[:used] << arg
+      arg
     end
 
     def read_format_directive(string)
@@ -75,7 +77,7 @@ module CLFormat
     end
 
     def format_loop(args)
-      while given?(args[:string])
+      while !(args[:string].nil? || args[:string].empty?)
         if d = read_format_directive(args[:string])
           args[:string] = d[:remaining]
 
@@ -179,14 +181,11 @@ module CLFormat
             if d[:flags].include?(':')
               flag_error('~?', '@', ':')
             elsif d[:flags].empty?
-              substr = args[:left].shift
-              args[:used] << substr
-              subargs = args[:left].shift
-              args[:used] << subargs
+              substr  = next_arg(args)
+              subargs = next_arg(args)
               args[:acc] += substr.cl_format(*subargs)
             else
-              substr = args[:left].shift
-              args[:used] << substr
+              substr = next_arg(args)
               args[:string] = substr + args[:string]
             end
           when '{'
@@ -223,8 +222,7 @@ module CLFormat
 
     def format_character(args)
       # currently ignores options
-      arg = args[:left].shift
-      args[:used] << arg
+      arg = next_arg(args)
       if arg.is_a?(String) && arg.length == 1
         args[:acc] += arg
       else
@@ -244,23 +242,20 @@ module CLFormat
     end
 
     def format_roman(old, args)
-      n = args[:left].shift
-      args[:used] << n
+      n = next_arg(args)
       raise TypeError, 'Roman numeral not integer' unless n.is_a?(Fixnum)
       args[:acc] += roman_numeral(n, old ? :old : :new)
     end
 
     def format_english(ordinal, args)
-      n = args[:left].shift
-      args[:used] << n
+      n = next_arg(args)
       raise TypeError, 'English number not integer' unless n.is_a?(Fixnum)
       args[:acc] += english_number(n, ordinal ? :ordinal : :cardinal)
     end
 
     def format_radix(radix, mincol, padchar, commachar, comma_interval,
                      flags, args)
-      n = args[:left].shift
-      args[:used] << n
+      n = next_arg(args)
       raise TypeError, "~R got #{n.inspect}" unless n.is_a?(Fixnum)
       use_commas  = flags.include?(':')
       force_sign  = flags.include?('@')
@@ -284,8 +279,7 @@ module CLFormat
     end
 
     def format_fixed(w, d, k, overflowchar, padchar, force_sign, args)
-      arg = args[:left].shift
-      args[:used] << arg
+      arg = next_arg(args)
       args[:acc] += format_flonum(arg.to_f, 0, w, d, k.to_i, overflowchar,
                                   padchar, force_sign)
     end
@@ -326,8 +320,7 @@ module CLFormat
     end
 
     def format_monetary(d, n, w, padchar, flags, args)
-      arg = args[:left].shift
-      args[:used] << arg
+      arg = next_arg(args)
       force_sign = flags.include?('@')
       if flags.include?(':')
         f = arg.to_f
@@ -343,8 +336,7 @@ module CLFormat
     end
 
     def format_object(mincol, colinc, minpad, padchar, side, directive, args)
-      arg = args[:left].shift
-      args[:used] << arg
+      arg = next_arg(args)
       obj_str = case directive.downcase
                 when 'a'; arg.to_s
                 when 's'; arg.inspect
@@ -355,12 +347,6 @@ module CLFormat
                     when :left;  pad + obj_str
                     when :right; obj_str + pad
                     end
-    end
-
-    def next_arg(args)
-      arg = args[:left].shift
-      args[:used] << arg
-      arg
     end
 
     def forward_arg(n, args)
@@ -392,8 +378,7 @@ module CLFormat
     end
 
     def format_plural(y_word, args)
-      n = args[:left].shift
-      args[:used] << n
+      n = next_arg(args)
       singular, plural = y_word ? ['y', 'ies'] : ['', 's']
       args[:acc] += (n.to_i == 1 ? singular : plural)
     end
@@ -405,8 +390,8 @@ module CLFormat
         if use_all_args
           loop_args, used = args[:left], args[:used]
         else
-          loop_args, used = args[:left].shift, []
-          args[:used] << loop_args
+          loop_args = next_arg(args)
+          used = []
         end
         left = loop_args
         until left.empty? && no_force
