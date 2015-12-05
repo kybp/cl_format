@@ -103,6 +103,11 @@ class ControlFlowTest < MiniTest::Test
   end
 
   def test_tilde_left_bracket_nested
-    assert_equal('b1', '~[~[a1~;a2]~;~[b1~;b2~]~]'.cl_format(1, 0))
+    assert_equal('b1', '~[~[a1~;a2~]~;~[b1~;b2~]~]'.cl_format(1, 0))
+  end
+
+  def test_tilde_left_bracket_double_nested
+    s = '~[~[~[1~;2~]~;~[3~;4~]~]~;~[~[5~;6~]~;~[7~;8~]~]~]'
+    assert_equal('6', s.cl_format(1,0,1))
   end
 end

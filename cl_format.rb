@@ -421,29 +421,24 @@ module CLFormat
       raise TypeError, 'non-numeric index' unless arg.is_a?(Fixnum)
       clause = clauses[arg]
       args[:string] = "#{clause}#{c[:after]}"
-      p "became #{clause}"
     end
 
     def split_clauses(string)
-      p "called with: #{string}"
       open    = /#{@@unescaped}~\[/
       close   = /#{@@unescaped}~\]/
       sep     = /#{@@unescaped}~;/
-      clause  = /(?<clause>(.|(?<cond>#{open}.*?\g<cond>*#{close}))*?)/
+      clause  = /(?<clause>.*?(?<cond>#{open}.*?\g<cond>*#{close})*.*?)/
       finish  = /(?<finish>#{sep}|#{close})/
       clauses = []
       loop do
         if m = /#{clause}#{finish}/.match(string)
-          p "adding: #{m[:clause]}"
           clauses << m[:clause]
           if m[:finish] =~ close
-            p clauses
             return { clauses: clauses, after: m.post_match }
           else
             string = m.post_match
           end
         else
-          p string
           raise 'unmatched ~['
         end
       end
