@@ -205,7 +205,8 @@ module CLFormat
             elsif d[:flags].include?('@')
               args[:string] = "~:[~;~:*#{args[:string]}"
             else
-              format_indexed(args)
+              norm = normalize_args('~[', d[:args], [[:int, nil]])
+              format_indexed(norm[0], args)
             end
           when ']'
             raise 'unmatched "~]"'
@@ -434,12 +435,12 @@ module CLFormat
       args[:string] = "#{c[:clauses][arg ? 1 : 0]}#{c[:after]}"
     end
 
-    def format_indexed(args)
+    def format_indexed(i, args)
       c = split_clauses(args[:string])
       clauses = c[:clauses]
-      arg = next_arg(args)
-      raise TypeError, 'non-numeric index' unless arg.is_a?(Fixnum)
-      clause = clauses[arg] || c[:default]
+      arg = next_arg(args) unless i
+      raise TypeError, 'non-numeric index' unless i || arg.is_a?(Fixnum)
+      clause = clauses[i || arg] || c[:default]
       args[:string] = "#{clause}#{c[:after]}"
     end
 

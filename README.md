@@ -6,6 +6,7 @@ described fully in the
 [HyperSpec](http://www.lispworks.com/documentation/HyperSpec/Body/22_c.htm).
 
 ## Currently implemented:
+Note: V and # prefix parameters are not yet supported.
 
 - [22.3.1: Basic Output]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_ca.htm)
@@ -19,13 +20,8 @@ described fully in the
 - [22.3.4: Printer Operations]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_cd.htm)
   (Omitted: ~W and the : modifier for ~A and ~S)
-- [22.3.7.1: Go-To]
-  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cga.htm)
-- [22.3.7.4: Iteration]
-  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgd.htm)
-  (except for specifying maximum iterations)
-- [22.3.7.6: Recursive Processing]
-  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cgf.htm)
+- [22.3.7: Control-Flow Operations]
+  (http://www.lispworks.com/documentation/HyperSpec/Body/22_cg.htm)
 - [22.3.8: Miscellaneous Operations]
   (http://www.lispworks.com/documentation/HyperSpec/Body/22_ch.htm)
 - [22.3.9.3: Ignored Newline]

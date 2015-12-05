@@ -115,6 +115,10 @@ class ControlFlowTest < MiniTest::Test
     assert_equal('etc', '~[zero~;one~;two~:;etc~]'.cl_format(5))
   end
 
+  def test_tilde_left_bracket_prefix_arg
+    assert_equal('one', '~1[zero~;one~;two~]'.cl_format(0))
+  end
+
   def test_tilde_colon_left_bracket_true
     assert_equal('1 yes 1', "~a ~:[no~;yes~] ~a".cl_format(1, true, 1))
   end
