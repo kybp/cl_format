@@ -25,6 +25,14 @@ class BasicOutputTest < MiniTest::Test
     assert_raises(RuntimeError) { '~1,c'.cl_format('x') }
   end
 
+  def test_tilde_colon_c_printing
+    assert_equal('a', '~:c'.cl_format('a'))
+  end
+
+  def test_tilde_colon_c_space
+    assert_equal('Space', '~:c'.cl_format(' '))
+  end
+
   def test_tilde_percent
     assert_equal("hi\n", 'hi~%'.cl_format)
   end

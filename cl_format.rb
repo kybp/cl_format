@@ -1,3 +1,4 @@
+require 'unicode_utils/char_name'
 require_relative 'english_number'
 require_relative 'roman_numeral'
 
@@ -84,7 +85,7 @@ module CLFormat
           case d[:directive].downcase
           when 'c'
             if d[:args].empty?
-              format_character(args)
+              format_character(d[:flags].include?(':'), args)
             else
               raise "~C does not take arguments, given: #{d[:args]}"
             end
@@ -220,13 +221,16 @@ module CLFormat
       args
     end
 
-    def format_character(args)
-      # currently ignores options
+    def format_character(name_non_printing, args)
       arg = next_arg(args)
-      if arg.is_a?(String) && arg.length == 1
-        args[:acc] += arg
-      else
+      if !( arg.is_a?(String) && arg.length == 1)
         raise TypeError, "~C got #{arg}"
+      end
+
+      if name_non_printing and arg !~ /[[:graph:]]/
+        args[:acc] += UnicodeUtils.char_name(arg).capitalize
+      else
+        args[:acc] += arg
       end
     end
 
