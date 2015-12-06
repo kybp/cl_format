@@ -85,7 +85,9 @@ module CLFormat
           case d[:directive].downcase
           when 'c'
             if d[:args].empty?
-              format_character(d[:flags].include?(':'), args)
+              format_character(d[:flags].include?(':'),
+                               d[:flags].include?('@'),
+                               args)
             else
               raise "~C does not take arguments, given: #{d[:args]}"
             end
@@ -221,13 +223,15 @@ module CLFormat
       args
     end
 
-    def format_character(name_non_printing, args)
+    def format_character(name_non_printing, at_sign, args)
       arg = next_arg(args)
       if !( arg.is_a?(String) && arg.length == 1)
         raise TypeError, "~C got #{arg}"
       end
 
-      if name_non_printing and arg !~ /[[:graph:]]/
+      if at_sign and not name_non_printing
+        args[:acc] += arg.inspect
+      elsif name_non_printing and arg !~ /[[:graph:]]/
         args[:acc] += UnicodeUtils.char_name(arg).capitalize
       else
         args[:acc] += arg

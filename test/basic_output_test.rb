@@ -33,6 +33,10 @@ class BasicOutputTest < MiniTest::Test
     assert_equal('Space', '~:c'.cl_format(' '))
   end
 
+  def test_tilde_at_c
+    assert_equal('"c"', '~@c'.cl_format('c'))
+  end
+
   def test_tilde_percent
     assert_equal("hi\n", 'hi~%'.cl_format)
   end
