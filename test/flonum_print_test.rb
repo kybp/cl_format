@@ -37,6 +37,14 @@ class FlonumPrintTest < MiniTest::Test
     assert_raises(RuntimeError) { '~:f'.cl_format(2.3) }
   end
 
+  def test_tilde_f_zero_width
+    assert_equal('1.', '~0f'.cl_format(1.0))
+  end
+
+  def test_tilde_f_round
+    assert_equal('1.0', '~,1f'.cl_format(0.99))
+  end
+
   def test_tilde_dollarsign
     assert_equal('3.00', '~$'.cl_format(3))
   end

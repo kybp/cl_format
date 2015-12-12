@@ -121,23 +121,27 @@ module CLFormat
             else
               format_radix(*norm, d[:flags], args)
             end
+
           when /[dbox]/
             norm = normalize_args(d[:directive], d[:args],
                                   [[:int, 0], [:char, ' '], [:char, ','],
                                    [:int, 3]])
             radix = { 'd' => 10, 'b' => 2, 'o' => 8, 'x' => 16}[d[:directive]]
             format_radix(radix, *norm, d[:flags], args)
+
           when 'f'
             norm = normalize_args(d[:directive], d[:args],
                                   [[:int,  nil], [:int,  nil], [:int, 0],
                                    [:char, nil], [:char, ' ']])
             flag_error(d[:directive], '@', d[:flags]) if d[:flags].include?(':')
             format_fixed(*norm, d[:flags].include?('@'), args)
+
           when '$'
             norm = normalize_args(d[:directive], d[:args],
                                   [[:int, 2], [:int, 1], [:int, 0],
                                    [:char, ' ']])
             format_monetary(*norm, d[:flags], args)
+
           when /[as]/
             norm = normalize_args(d[:directive], d[:args],
                                   [[:int, 0], [:int, 1], [:int, 0],
@@ -145,6 +149,7 @@ module CLFormat
             flag_error(d[:directive], '@', d[:flags]) if d[:flags].include?(':')
             side = d[:flags].include?('@') ? :left : :right
             format_object(*norm, side, d[:directive], args)
+
           when '*'
             if d[:flags].include?('@') && d[:flags].include?(':')
               flag_error(d[:directive], :not_both, d[:flags])
@@ -159,6 +164,7 @@ module CLFormat
                 forward_arg(norm[0], args)
               end
             end
+
           when "\n"
             normalize_args('~\n', d[:args], [])
             if d[:flags].include?(':') && d[:flags].include?('@')
@@ -171,15 +177,18 @@ module CLFormat
             else
               args[:string].sub!(/\A\s*/, '')
             end
+
           when '('
             normalize_args('~(', d[:args], [])
             convert_case(args[:string], d[:flags], args)
           when ')'
             raise 'unmatched "~)"'
+
           when 'p'
             normalize_args('~P', d[:args], [])
             backward_arg(1, args) if d[:flags].include?(':')
             format_plural(d[:flags].include?('@'), args)
+
           when '?'
             if d[:flags].include?(':')
               flag_error('~?', '@', ':')
@@ -191,14 +200,17 @@ module CLFormat
               substr = next_arg(args)
               args[:string] = substr + args[:string]
             end
+
           when '{'
             use_sublists = d[:flags].include?(':')
             use_all_args = d[:flags].include?('@')
             format_iteration(use_sublists, use_all_args, args)
           when '}'
             raise 'unmatched "~}"'
+
           when '^'
             args[:string] = nil if args[:left].empty?
+
           when '['
             if d[:flags].include?(':') and d[:flags].include?('@')
               flag_error('newline', :not_both, d[:flags])
@@ -212,6 +224,7 @@ module CLFormat
             end
           when ']'
             raise 'unmatched "~]"'
+
           else
             raise "unimplemented format directive: ~#{d[:directive]}"
           end
@@ -294,6 +307,7 @@ module CLFormat
 
     def format_flonum(arg, n, w, d, k, overflowchar, padchar, force_sign)
       return arg.to_s if w.nil? && d.nil?
+      w = 0 if w.nil?
 
       scaled = arg * 10 ** k
       c, m = scaled.to_i, (scaled % 1).to_f
@@ -308,7 +322,7 @@ module CLFormat
       end
 
       result = c.to_s
-      result = '0' * [0, n - result.length].max + "#{result}."
+      result = '0' * [0, n - result.length].max + result + '.'
       result = '+' + result if force_sign && c >= 0
 
       if d
@@ -317,7 +331,8 @@ module CLFormat
         result += '0' * [0, d - m_str.length].max
       else
         max_d = [0, w - result.length].max
-        result += m.round(max_d).to_s[2..-1]
+	p result; p m; p max_d
+        result += m.round(max_d).to_s[2..-1] || ''
       end
 
       if result.length > w && overflowchar
