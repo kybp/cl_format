@@ -312,27 +312,22 @@ module CLFormat
       scaled = arg * 10 ** k
       c, m = scaled.to_i, (scaled % 1).to_f
 
-      if c.zero? && w == d + 1
-        result = m.to_s[1..-1]
-        if result.length - 1 < w
-          return result + '0' * (w - result.length)
-        else
-          return result[0..w]
-        end
-      end
-
-      result = c.to_s
-      result = '0' * [0, n - result.length].max + result + '.'
-      result = '+' + result if force_sign && c >= 0
-
-      if d
-        m_str = m.round(d).to_s[2..-1] || ''
-        result += "#{m_str}"
-        result += '0' * [0, d - m_str.length].max
-      else
-        max_d = [0, w - result.length].max
-	p result; p m; p max_d
-        result += m.round(max_d).to_s[2..-1] || ''
+      result, bumped = nil, false
+      loop do
+	c_str   = c.zero? && w == d + 1 ? '' : c.to_s
+	c_str   = '0' * [0, n - c_str.length].max + c_str + '.'
+	c_str   = '+' + c_str if force_sign && c >= 0
+	max_d   = d || [0, w - c_str.length].max
+	rounded = m.round(max_d)
+	if !bumped && rounded >= 1
+	  c += 1
+	  bumped = true
+	else
+	  m_str = rounded.to_s[2..-1] || ''
+	  m_str += '0' * [0, d - m_str.length].max unless d.nil?
+	  result = c_str + m_str
+	  break
+	end
       end
 
       if result.length > w && overflowchar
