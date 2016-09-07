@@ -10,11 +10,11 @@ class RadixControlTest < MiniTest::Test
   end
 
   def test_tilde_colon_r
-    assert_equal('five hundred twenty-sixth', '~:r'.cl_format(526))
+    assert_equal('five hundred and twenty-sixth', '~:r'.cl_format(526))
   end
 
   def test_tilde_r_plain
-    assert_equal('five hundred twenty-six', '~r'.cl_format(526))
+    assert_equal('five hundred and twenty-six', '~r'.cl_format(526))
   end
 
   def test_tilde_r_negative_zero

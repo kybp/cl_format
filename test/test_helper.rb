@@ -1,12 +1,13 @@
 require 'simplecov'
 require 'minitest/autorun'
 require 'minitest/reporters'
+
 SimpleCov.start do
   add_filter 'test'
   command_name 'MiniTest'
 end
 
-require_relative '../cl_format'
+require 'cl_format'
 
 class BrightReporter < MiniTest::Reporters::DefaultReporter
   def initialize

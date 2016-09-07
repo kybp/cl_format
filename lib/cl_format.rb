@@ -1,6 +1,6 @@
 require 'unicode_utils/char_name'
-require_relative 'english_number'
-require_relative 'roman_numeral'
+require 'human_numbers'
+require 'cl_format/roman_numeral'
 
 module CLFormat
   class CLFormatter
@@ -265,13 +265,13 @@ module CLFormat
     def format_roman(old, args)
       n = next_arg(args)
       raise TypeError, 'Roman numeral not integer' unless n.is_a?(Fixnum)
-      args[:acc] += roman_numeral(n, old ? :old : :new)
+      args[:acc] += CLFormat::roman_numeral(n, old ? :old : :new)
     end
 
     def format_english(ordinal, args)
       n = next_arg(args)
       raise TypeError, 'English number not integer' unless n.is_a?(Fixnum)
-      args[:acc] += english_number(n, ordinal ? :ordinal : :cardinal)
+      args[:acc] += n.to_english(ordinal ? :ordinal : :cardinal)
     end
 
     def format_radix(radix, mincol, padchar, commachar, comma_interval,
